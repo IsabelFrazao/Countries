@@ -1,0 +1,45 @@
+﻿<Window x:Class="Countries.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Countries"
+        mc:Ignorable="d"
+        Title="Países" Height="690" Width="1400" WindowStartupLocation="CenterScreen" WindowState="Normal">
+    <Grid Margin="0,0,0,0" >
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="382*"/>
+            <ColumnDefinition Width="315*"/>
+        </Grid.ColumnDefinitions>
+        <ComboBox x:Name="comboBoxPaises" HorizontalAlignment="Left" Margin="166,50,0,0" VerticalAlignment="Top" Width="217" Height="27" SelectionChanged="comboBoxPaises_SelectionChanged"/>
+        <Label Content="Escolha um País:" HorizontalAlignment="Left" Margin="35,51,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="Nome:" HorizontalAlignment="Left" Margin="35,126,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="Capital:" HorizontalAlignment="Left" Margin="35,167,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="Região:" HorizontalAlignment="Left" Margin="31,212,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="Sub-Região:" HorizontalAlignment="Left" Margin="33,256,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="População:" HorizontalAlignment="Left" Margin="33,304,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="Índice GINI:" HorizontalAlignment="Left" Margin="33,352,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="Bandeira:" HorizontalAlignment="Left" Margin="35,398,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Image HorizontalAlignment="Left" Height="31" VerticalAlignment="Top" Width="822" Source="img_paises.jpg" Stretch="Fill" Margin="-11,0,0,0" Grid.ColumnSpan="2"/>
+        <Image HorizontalAlignment="Left" Height="34" VerticalAlignment="Top" Width="578" Source="img_paises2.jpg" Margin="40.227,0,0,0" Stretch="UniformToFill" Grid.Column="1"/>
+        <Label Content="Tradutor:" HorizontalAlignment="Left" Margin="677,134,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="Conversor Moeda:" HorizontalAlignment="Left" Margin="677,183,0,0" VerticalAlignment="Top" FontWeight="Bold" Grid.ColumnSpan="2"/>
+        <Label Content="Meteorologia:" HorizontalAlignment="Left" Margin="677,228,0,0" VerticalAlignment="Top" FontWeight="Bold" Grid.ColumnSpan="2"/>
+        <Label Content="Locais/Eventos:" HorizontalAlignment="Left" Margin="677,272,0,0" VerticalAlignment="Top" FontWeight="Bold" Grid.ColumnSpan="2"/>
+        <Label Content="Segurança:" HorizontalAlignment="Left" Margin="677,312,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="https://systran-systran-platform-for-language-processing-v1.p.rapidapi.com/translation/text/translate" HorizontalAlignment="Left" Margin="40.227,134,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <Label Content="https://currencyconverter.p.rapidapi.com/" HorizontalAlignment="Left" Margin="40.227,183,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <Label Content="https://community-open-weather-map.p.rapidapi.com/weather" HorizontalAlignment="Left" Margin="40.227,228,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <Label Content="https://community-tripit.p.rapidapi.com/create" HorizontalAlignment="Left" Margin="40.227,272,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <Label Content="https://jgentes-crime-data-v1.p.rapidapi.com/crime" HorizontalAlignment="Left" Margin="40.227,312,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <Label Content="Status:" HorizontalAlignment="Left" Margin="31,600,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label x:Name="labelName" Content="Nome:" HorizontalAlignment="Left" Margin="166,126,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
+        <Label x:Name="labelCapital" Content="Nome:" HorizontalAlignment="Left" Margin="166,167,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
+        <Label x:Name="labelRegion" Content="Nome:" HorizontalAlignment="Left" Margin="166,210,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
+        <Label x:Name="labelSubRegion" Content="Nome:" HorizontalAlignment="Left" Margin="166,256,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
+        <Label x:Name="labelPopulation" Content="Nome:" HorizontalAlignment="Left" Margin="166,304,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
+        <Label x:Name="labelGini" Content="Nome:" HorizontalAlignment="Left" Margin="166,352,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
+        <Image x:Name="imageFlag1" HorizontalAlignment="Left" Height="221" Margin="334,352,0,0" VerticalAlignment="Top" Width="290" Stretch="Fill"/>
+
+    </Grid>
+</Window>
