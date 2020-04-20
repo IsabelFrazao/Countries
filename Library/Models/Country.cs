@@ -20,8 +20,8 @@ namespace Library.Models
         public int Population { get; set; }
         public List<double> Latlng { get; set; }
         public string Demonym { get; set; }
-        public object Area { get; set; }
-        public object Gini { get; set; }
+        public double? Area { get; set; }
+        public double? Gini { get; set; }
         public List<string> Timezones { get; set; }
         public List<string> Borders { get; set; }
         public string NativeName { get; set; }

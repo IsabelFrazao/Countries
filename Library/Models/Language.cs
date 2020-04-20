@@ -12,5 +12,10 @@ namespace Library
         public string iso639_2 { get; set; }
         public string name { get; set; }
         public string nativeName { get; set; }
+
+        public override string ToString()
+        {
+            return $"{iso639_1} - {name}";
+        }
     }
 }

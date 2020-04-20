@@ -11,35 +11,49 @@
             <ColumnDefinition Width="382*"/>
             <ColumnDefinition Width="315*"/>
         </Grid.ColumnDefinitions>
-        <ComboBox x:Name="comboBoxPaises" HorizontalAlignment="Left" Margin="166,50,0,0" VerticalAlignment="Top" Width="217" Height="27" SelectionChanged="comboBoxPaises_SelectionChanged"/>
-        <Label Content="Escolha um País:" HorizontalAlignment="Left" Margin="35,51,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-        <Label Content="Nome:" HorizontalAlignment="Left" Margin="35,126,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-        <Label Content="Capital:" HorizontalAlignment="Left" Margin="35,167,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-        <Label Content="Região:" HorizontalAlignment="Left" Margin="31,212,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-        <Label Content="Sub-Região:" HorizontalAlignment="Left" Margin="33,256,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-        <Label Content="População:" HorizontalAlignment="Left" Margin="33,304,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-        <Label Content="Índice GINI:" HorizontalAlignment="Left" Margin="33,352,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-        <Label Content="Bandeira:" HorizontalAlignment="Left" Margin="35,398,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
         <Image HorizontalAlignment="Left" Height="31" VerticalAlignment="Top" Width="822" Source="img_paises.jpg" Stretch="Fill" Margin="-11,0,0,0" Grid.ColumnSpan="2"/>
         <Image HorizontalAlignment="Left" Height="34" VerticalAlignment="Top" Width="578" Source="img_paises2.jpg" Margin="40.227,0,0,0" Stretch="UniformToFill" Grid.Column="1"/>
-        <Label Content="Tradutor:" HorizontalAlignment="Left" Margin="677,134,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-        <Label Content="Conversor Moeda:" HorizontalAlignment="Left" Margin="677,183,0,0" VerticalAlignment="Top" FontWeight="Bold" Grid.ColumnSpan="2"/>
-        <Label Content="Meteorologia:" HorizontalAlignment="Left" Margin="677,228,0,0" VerticalAlignment="Top" FontWeight="Bold" Grid.ColumnSpan="2"/>
-        <Label Content="Locais/Eventos:" HorizontalAlignment="Left" Margin="677,272,0,0" VerticalAlignment="Top" FontWeight="Bold" Grid.ColumnSpan="2"/>
-        <Label Content="Segurança:" HorizontalAlignment="Left" Margin="677,312,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-        <Label Content="https://systran-systran-platform-for-language-processing-v1.p.rapidapi.com/translation/text/translate" HorizontalAlignment="Left" Margin="40.227,134,0,0" VerticalAlignment="Top" Grid.Column="1"/>
-        <Label Content="https://currencyconverter.p.rapidapi.com/" HorizontalAlignment="Left" Margin="40.227,183,0,0" VerticalAlignment="Top" Grid.Column="1"/>
-        <Label Content="https://community-open-weather-map.p.rapidapi.com/weather" HorizontalAlignment="Left" Margin="40.227,228,0,0" VerticalAlignment="Top" Grid.Column="1"/>
-        <Label Content="https://community-tripit.p.rapidapi.com/create" HorizontalAlignment="Left" Margin="40.227,272,0,0" VerticalAlignment="Top" Grid.Column="1"/>
-        <Label Content="https://jgentes-crime-data-v1.p.rapidapi.com/crime" HorizontalAlignment="Left" Margin="40.227,312,0,0" VerticalAlignment="Top" Grid.Column="1"/>
-        <Label Content="Status:" HorizontalAlignment="Left" Margin="31,600,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-        <Label x:Name="labelName" Content="Nome:" HorizontalAlignment="Left" Margin="166,126,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
-        <Label x:Name="labelCapital" Content="Nome:" HorizontalAlignment="Left" Margin="166,167,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
-        <Label x:Name="labelRegion" Content="Nome:" HorizontalAlignment="Left" Margin="166,210,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
-        <Label x:Name="labelSubRegion" Content="Nome:" HorizontalAlignment="Left" Margin="166,256,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
-        <Label x:Name="labelPopulation" Content="Nome:" HorizontalAlignment="Left" Margin="166,304,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
-        <Label x:Name="labelGini" Content="Nome:" HorizontalAlignment="Left" Margin="166,352,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
-        <Image x:Name="imageFlag1" HorizontalAlignment="Left" Height="221" Margin="334,352,0,0" VerticalAlignment="Top" Width="290" Stretch="Fill"/>
+        <Label Content="Name:" HorizontalAlignment="Left" Margin="279,225,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="Capital:" HorizontalAlignment="Left" Margin="279,266,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="Region:" HorizontalAlignment="Left" Margin="279,309,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="Sub-Region:" HorizontalAlignment="Left" Margin="279,355,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="Population:" HorizontalAlignment="Left" Margin="279,403,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Label Content="GINI:" HorizontalAlignment="Left" Margin="279,451,0,0" VerticalAlignment="Top" FontWeight="Bold" RenderTransformOrigin="1.029,0.611"/>
+        <Label x:Name="labelName" Content="" HorizontalAlignment="Left" Margin="410,225,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
+        <Label x:Name="labelCapital" Content="" HorizontalAlignment="Left" Margin="410,266,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
+        <Label x:Name="labelRegion" Content="" HorizontalAlignment="Left" Margin="410,309,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
+        <Label x:Name="labelSubRegion" Content="" HorizontalAlignment="Left" Margin="410,355,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
+        <Label x:Name="labelPopulation" Content="" HorizontalAlignment="Left" Margin="410,403,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
+        <Label x:Name="labelGini" Content="" HorizontalAlignment="Left" Margin="410,451,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="217"/>
+        <Image x:Name="imageFlag1" HorizontalAlignment="Left" Height="109" Margin="410,93,0,0" VerticalAlignment="Top" Width="145" Stretch="Fill" RenderTransformOrigin="1.095,0.39"/>
+        <Label x:Name="labelResult" Content="" HorizontalAlignment="Left" Margin="46,62,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Button x:Name="labelTranslator" Content="Language Translator" FontWeight="Bold" Grid.Column="1" HorizontalAlignment="Left" Margin="10,93,0,0" VerticalAlignment="Top" Width="582" Height="22"/>
+        <Button x:Name="labelConverter" Content="Currency Converter" FontWeight="Bold" Grid.Column="1" HorizontalAlignment="Left" Margin="10,414,0,0" VerticalAlignment="Top" Width="582" Height="22"/>
+        <TextBox x:Name="txtBoxTranslatorInput" Grid.Column="1" HorizontalAlignment="Left" Height="113" Margin="72,201,0,0" TextWrapping="Wrap" Text="Insert the Text to Translate" VerticalAlignment="Top" Width="223" GotFocus="txtBoxTranslatorInput_GotFocus"/>
+        <TextBox x:Name="txtBoxTranslatorOutput" Grid.Column="1" HorizontalAlignment="Left" Height="113" Margin="307,201,0,0" TextWrapping="Wrap" Text="Translated Text" VerticalAlignment="Top" Width="223"/>
+        <TextBox x:Name="txtBoxConverterInput" Grid.Column="1" HorizontalAlignment="Left" Height="26" Margin="72,518,0,0" TextWrapping="Wrap" Text="Insert the Value to Convert" VerticalAlignment="Top" Width="223" GotFocus="txtBoxConverterInput_GotFocus"/>
+        <TextBox x:Name="txtBoxConverterOutput" Grid.Column="1" HorizontalAlignment="Left" Height="26" Margin="307,518,0,0" TextWrapping="Wrap" Text="Converted Value" VerticalAlignment="Top" Width="223"/>
+        <ComboBox x:Name="comboBoxConverterInput" Grid.Column="1" HorizontalAlignment="Left" Margin="72,476,0,0" VerticalAlignment="Top" Width="223"/>
+        <ComboBox x:Name="comboBoxConverterOutput" Grid.Column="1" HorizontalAlignment="Left" Margin="307,476,0,0" VerticalAlignment="Top" Width="223"/>
+        <Button x:Name="btnConvert" Content="Convert" FontWeight="Bold" Grid.Column="1" HorizontalAlignment="Left" Margin="190,598,0,0" VerticalAlignment="Top" Width="223" Height="22" Click="btnConvert_Click"/>
+        <Button x:Name="btnTranslate" Content="Translate" FontWeight="Bold" Grid.Column="1" HorizontalAlignment="Left" Margin="190,367,0,0" VerticalAlignment="Top" Width="223" Height="22" Click="btnTranslate_Click"/>
+        <ComboBox x:Name="comboBoxTranslatorInput" Grid.Column="1" HorizontalAlignment="Left" Margin="72,154,0,0" VerticalAlignment="Top" Width="223"/>
+        <ComboBox x:Name="comboBoxTranslatorOutput" Grid.Column="1" HorizontalAlignment="Left" Margin="307,154,0,0" VerticalAlignment="Top" Width="223"/>
+        <ListBox x:Name="listBoxCountries" HorizontalAlignment="Left" Height="453" Margin="46,146,0,0" VerticalAlignment="Top" Width="189"/>
+        <TextBox x:Name="txtBoxCountries" HorizontalAlignment="Left" Height="23" Margin="46,93,0,0" TextWrapping="Wrap" Text="Search for a Country" VerticalAlignment="Top" Width="189" TextChanged="txtBoxCountries_TextChanged" GotFocus="txtBoxCountries_GotFocus"/>
+        <Button x:Name="btnCountryOK" Content="OK" FontWeight="Bold" HorizontalAlignment="Left" Margin="46,121,0,0" VerticalAlignment="Top" Width="189" Click="btnCountryOK_Click"/>
+        <Label x:Name="labelSelectLang" Content="Choose a Language:" HorizontalAlignment="Left" Margin="72,128,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="223" Grid.Column="1"/>
+        <Label x:Name="labelSelectLangCountry" Content="Choose a Language from this Country:" HorizontalAlignment="Left" Margin="307,128,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="236" Grid.Column="1"/>
+        <Label x:Name="labelSelectCurrency" Content="Choose a Currency:" HorizontalAlignment="Left" Margin="72,450,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="223" Grid.Column="1"/>
+        <Label x:Name="labelSelectCurrencyCountry" Content="Choose a Currency from this Country:" HorizontalAlignment="Left" Margin="307,450,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="223" Grid.Column="1"/>
+        <Button x:Name="btnSwitchLanguage" HorizontalAlignment="Left" Margin="281,323,0,0" VerticalAlignment="Top" Width="40" Height="28" Grid.Column="1" Click="btnSwitchLanguage_Click">
+            <StackPanel>
+                <Image Source="images.png" Height="25" Width="37" />
+            </StackPanel>
+        </Button>
+        <Button x:Name="btnSwitchCurrency" HorizontalAlignment="Left" Margin="281,554,0,0" VerticalAlignment="Top" Width="40" Height="28" Grid.Column="1" Click="btnSwitchCurrency_Click">
+            <Image Source="images.png" Height="25" Width="37" />
+        </Button>
 
     </Grid>
 </Window>
