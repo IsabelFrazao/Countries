@@ -2,7 +2,6 @@
 using Library.Models;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
-using RestSharp;
 using ServiceStack.Auth;
 using Svg;
 using System;
@@ -16,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace Services
 {
-    public class ApiService //Trabalhar com a Api - CRUD
+    public class ApiService
     {
         public async Task<Response> GetCountries(string urlBase, string controller)
         {
@@ -64,8 +63,8 @@ namespace Services
             {
                 var client = new HttpClient
                 {
-                    BaseAddress = new Uri(urlBase)//Onde está o endereço base da API
-                }; //Criar um Http para fazer a ligação externa via http
+                    BaseAddress = new Uri(urlBase)
+                };
 
                 HttpRequestMessage request = new HttpRequestMessage();
                 request.RequestUri = new Uri(urlBase + controller);
@@ -109,12 +108,12 @@ namespace Services
             {
                 var client = new HttpClient
                 {
-                    BaseAddress = new Uri(urlBase)//Onde está o endereço base da API
-                }; //Criar um Http para fazer a ligação externa via http
+                    BaseAddress = new Uri(urlBase)
+                };
 
-                var response = await client.GetAsync(controller);//Onde está o Controlador da API
+                var response = await client.GetAsync(controller);
 
-                var result = await response.Content.ReadAsStringAsync();//Carregar os resultados em forma de string para dentro do result
+                var result = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {

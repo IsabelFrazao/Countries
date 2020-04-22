@@ -55,7 +55,8 @@ namespace Countries
 
             ConvertAsync();
         }
-        private async Task LoadCountriesAsync()//Tests the Internet Connection
+
+        private async void LoadCountriesAsync()//Tests the Internet Connection
         {
             bool load;
 
@@ -65,7 +66,7 @@ namespace Countries
 
             if (!connection.IsSuccess)
             {
-                //LoadLocalRates();
+                LoadLocalCountries();
                 load = false;
             }
             else
@@ -89,28 +90,34 @@ namespace Countries
             if (load)
             {
                 labelResult.Content = "Loaded Successfully";//"(Loaded from the Internet on\n  {0:F}", DateTime.Now)
+                                
+                await dataService.DeleteData();
+
+                await dataService.SaveData(Countries, Rates);
             }
-            /*else
+            else
             {
-                labelStatus.Text = string.Format("Loaded from the Database");
-            }*/
+                labelResult.Content = string.Format("Loaded Successfully from the Database");
+            }
         }
-        /* private void LoadLocalRates()
-         {
-             Countries = dataService.GetData();
-         }*/
+
+        private void LoadLocalCountries()
+        {
+            Countries = dataService.GetCountryData();
+        }
+
         private async Task LoadApiCountries()
         {
-            //progressBar1.Value = 0;
-
             var response = await apiService.GetCountries("http://restcountries.eu", "/rest/v2/all");
 
             Countries = (List<Country>)response.Result;
 
-            //dataService.DeleteData();
-
-            //dataService.SaveData(Countries);
+            /*foreach(var c in Countries)
+            {
+                MessageBox.Show(c.Alpha3Code);
+            }*/
         }
+
         private void GetFlags(List<Country> countries)
         {
             //Se a pasta Flags não existir, criar
@@ -121,61 +128,76 @@ namespace Countries
 
             foreach (var ct in countries)
             {
-                try
+                string flagNameAb = ct.Flag.Split('/')[4].Split('.')[0];
+
+                if (!File.Exists(Environment.CurrentDirectory + "/Flags" + $"/{flagNameAb}.jpg"))
                 {
-                    //Create a Path inside the Flags Folder to save the Flag Image with the name abbreviated
-                    string flagNameAb = ct.Flag.Split('/')[4].Split('.')[0];
-                    var path = @"Flags\" + $"{flagNameAb}.svg";//Path to save the image as SVG
-
-                    //Save the image as SVG from the URL
-                    string svgFileName = "https://restcountries.eu" + $"/data/{flagNameAb}";
-
-                    using (WebClient webClient = new WebClient())
+                    try
                     {
-                        webClient.DownloadFile(svgFileName, path);
-                    }
+                        //Create a Path inside the Flags Folder to save the Flag Image with the name abbreviated                    
+                        var path = @"Flags\" + $"{flagNameAb}.svg";//Path to save the image as SVG
 
-                    #region Open the SVG Image and Save it in the Flags Folder as JPEG
+                        //Save the image as SVG from the URL
+                        string svgFileName = "https://restcountries.eu" + $"/data/{flagNameAb}";
 
-                    var path2 = @"Flags\" + $"{flagNameAb}.jpg";//Path to Save the image as JPEG
 
-                    //Read SVG Document from file system
-                    var svgDocument = SvgDocument.Open(path);
-                    var bitmap = svgDocument.Draw();
+                        using (WebClient webClient = new WebClient())
+                        {
+                            webClient.DownloadFile(svgFileName, path);
+                        }
 
-                    //Save converted SVG to file system
-                    if (!File.Exists(path2))
-                    {
-                        bitmap.Save(path2, ImageFormat.Jpeg);
-                    }
+                        #region Open the SVG Image and Save it in the Flags Folder as JPEG
 
-                    //Delete the SVG Images
-                    if (File.Exists(path))
-                    {
-                        File.Delete(path);
+                        var path2 = @"Flags\" + $"{flagNameAb}.jpg";//Path to Save the image as JPEG
+
+                        //Read SVG Document from file system
+                        var svgDocument = SvgDocument.Open(path);
+                        var bitmap = svgDocument.Draw(100, 100);
+
+                        //Save converted SVG to file system
+                        if (!File.Exists(path2))
+                        {
+                            bitmap.Save(path2, ImageFormat.Jpeg);
+                        }
+
+                        //Delete the SVG Images
+                        if (File.Exists(path))
+                        {
+                            File.Delete(path);
+                        }
                     }
                     #endregion
-                }
-                catch
-                {
-                    continue;
+
+                    catch
+                    {
+                        continue;
+                    }
                 }
             }
         }
+
         private void btnTranslate_Click(object sender, RoutedEventArgs e)
         {
-            string source = comboBoxTranslatorInput.Text.Split(' ')[0];
-            string target = comboBoxTranslatorOutput.Text.Split(' ')[0];
+            if(string.IsNullOrEmpty(comboBoxTranslatorInput.Text) || string.IsNullOrEmpty(comboBoxTranslatorOutput.Text))
+            {
+                MessageBox.Show("   You must choose a Language", "", MessageBoxButton.OK);
+            }
+            else
+            {
+                string source = comboBoxTranslatorInput.Text.Split(' ')[0];
+                string target = comboBoxTranslatorOutput.Text.Split(' ')[0];
 
-            TranslateAsync(source, target, txtBoxTranslatorInput.Text);
+                TranslateAsync(source, target, txtBoxTranslatorInput.Text);
+            }            
         }
+
         private async Task TranslateAsync(string source, string target, string input)
         {
             var response = await apiService.GetTranslation("https://systran-systran-platform-for-language-processing-v1.p.rapidapi.com", $"/translation/text/translate?source={source}&target={target}&input={input}");
 
             string output = (string)response.Result;
 
-            if(string.IsNullOrEmpty(output))
+            if (string.IsNullOrEmpty(output))
             {
                 txtBoxTranslatorOutput.Text = "-- Translation Unavailable --";
             }
@@ -184,10 +206,12 @@ namespace Countries
                 txtBoxTranslatorOutput.Text = output;
             }
         }
+
         private void txtBoxTranslatorInput_GotFocus(object sender, RoutedEventArgs e)
         {
             txtBoxTranslatorInput.Text = string.Empty;
         }
+
         private void txtBoxCountries_TextChanged(object sender, TextChangedEventArgs e)
         {
             listBoxCountries.ItemsSource = null;
@@ -204,12 +228,13 @@ namespace Countries
                 }
             }
         }
+
         private void btnCountryOK_Click(object sender, RoutedEventArgs e)
         {
             labelResult.Content = string.Empty;
             comboBoxTranslatorInput.ItemsSource = null;
             comboBoxTranslatorOutput.ItemsSource = null;
-            comboBoxTranslatorOutput.Items.Clear();            
+            comboBoxTranslatorOutput.Items.Clear();
             comboBoxConverterInput.ItemsSource = null;
             comboBoxConverterOutput.ItemsSource = null;
             comboBoxConverterOutput.Items.Clear();
@@ -242,9 +267,9 @@ namespace Countries
 
             List<string> LangDistinct = new List<string>();
 
-            foreach(var ct in Countries)
+            foreach (var ct in Countries)
             {
-                foreach(var lg in ct.Languages)
+                foreach (var lg in ct.Languages)
                 {
                     if (!LangDistinct.Contains(lg.ToString()))
                         LangDistinct.Add(lg.ToString());
@@ -271,20 +296,24 @@ namespace Countries
                 comboBoxTranslatorOutput.Items.Add(lg.ToString());
             }
         }
-        private async Task ConvertAsync()
+
+        private async void ConvertAsync()
         {
             var response = await apiService.GetRates("https://cambiosrafa.azurewebsites.net", "/api/rates");
 
             Rates = (List<Rate>)response.Result;
         }
+
         private void txtBoxCountries_GotFocus(object sender, RoutedEventArgs e)
         {
             txtBoxCountries.Text = string.Empty;
         }
+
         private void btnConvert_Click(object sender, RoutedEventArgs e)
         {
             Convert();
         }
+
         private void Convert()
         {
             if (string.IsNullOrEmpty(txtBoxConverterInput.Text))
@@ -323,15 +352,17 @@ namespace Countries
 
             txtBoxConverterOutput.Text = Math.Round(convertedValue, 2).ToString();
         }
+
         private void txtBoxConverterInput_GotFocus(object sender, RoutedEventArgs e)
         {
             txtBoxConverterInput.Text = string.Empty;
         }
+
         private void btnSwitchLanguage_Click(object sender, RoutedEventArgs e)
         {
             List<string> LangList = new List<string>();
 
-            foreach(var lang in comboBoxTranslatorOutput.Items)
+            foreach (var lang in comboBoxTranslatorOutput.Items)
             {
                 LangList.Add(lang.ToString());
             }
@@ -353,13 +384,14 @@ namespace Countries
             labelSelectLang.Content = labelSelectLangCountry.Content;
             labelSelectLangCountry.Content = label;
 
-            if(txtBoxTranslatorOutput.Text != "Translated Text")
+            if (txtBoxTranslatorOutput.Text != "Translated Text")
             {
                 var text = txtBoxTranslatorInput.Text;
                 txtBoxTranslatorInput.Text = txtBoxTranslatorOutput.Text;
                 txtBoxTranslatorOutput.Text = text;
-            }            
+            }
         }
+
         private void btnSwitchCurrency_Click(object sender, RoutedEventArgs e)
         {
             List<string> CurrencyList = new List<string>();

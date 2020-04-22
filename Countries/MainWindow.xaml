@@ -54,6 +54,5 @@
         <Button x:Name="btnSwitchCurrency" HorizontalAlignment="Left" Margin="281,554,0,0" VerticalAlignment="Top" Width="40" Height="28" Grid.Column="1" Click="btnSwitchCurrency_Click">
             <Image Source="images.png" Height="25" Width="37" />
         </Button>
-
     </Grid>
 </Window>
