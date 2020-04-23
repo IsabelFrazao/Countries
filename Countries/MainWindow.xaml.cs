@@ -89,9 +89,9 @@ namespace Countries
 
             if (load)
             {
-                labelResult.Content = "Loaded Successfully";//"(Loaded from the Internet on\n  {0:F}", DateTime.Now)
-                                
-                await dataService.DeleteData();
+                labelResult.Content = "Loaded Successfully";//"(Loaded from the Internet on\n  {0:F}", DateTime.Now)  
+
+                await dataService.DeleteDataAsync();
 
                 await dataService.SaveData(Countries, Rates);
             }
@@ -103,7 +103,7 @@ namespace Countries
 
         private void LoadLocalCountries()
         {
-            Countries = dataService.GetCountryData();
+            Countries = dataService.GetCountryDataAsync();
         }
 
         private async Task LoadApiCountries()
@@ -111,11 +111,6 @@ namespace Countries
             var response = await apiService.GetCountries("http://restcountries.eu", "/rest/v2/all");
 
             Countries = (List<Country>)response.Result;
-
-            /*foreach(var c in Countries)
-            {
-                MessageBox.Show(c.Alpha3Code);
-            }*/
         }
 
         private void GetFlags(List<Country> countries)
@@ -176,7 +171,7 @@ namespace Countries
             }
         }
 
-        private void btnTranslate_Click(object sender, RoutedEventArgs e)
+        private async void btnTranslate_Click(object sender, RoutedEventArgs e)
         {
             if(string.IsNullOrEmpty(comboBoxTranslatorInput.Text) || string.IsNullOrEmpty(comboBoxTranslatorOutput.Text))
             {
@@ -187,7 +182,7 @@ namespace Countries
                 string source = comboBoxTranslatorInput.Text.Split(' ')[0];
                 string target = comboBoxTranslatorOutput.Text.Split(' ')[0];
 
-                TranslateAsync(source, target, txtBoxTranslatorInput.Text);
+                await TranslateAsync(source, target, txtBoxTranslatorInput.Text);
             }            
         }
 
@@ -276,9 +271,10 @@ namespace Countries
                 }
             }
 
-            comboBoxConverterInput.ItemsSource = Rates;
             comboBoxTranslatorInput.ItemsSource = LangDistinct;
 
+            comboBoxConverterInput.ItemsSource = Rates;
+            
             foreach (var cr in country.Currencies)
             {
                 foreach (var rate in Rates)

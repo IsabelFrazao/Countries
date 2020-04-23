@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Documents;
 
 namespace Services
 {
@@ -37,7 +38,6 @@ namespace Services
                 connection = new SQLiteConnection("Data Source =" + path);
 
                 connection.Open();
-
 
                 string sqlcommand = "CREATE TABLE IF NOT EXISTS CountryCurrency(" +
                                     "CountryCode varchar(3)," +
@@ -78,6 +78,10 @@ namespace Services
 
                 command = new SQLiteCommand(sqlcommand, connection);
                 command.ExecuteNonQuery();
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
             }
             catch (Exception ex)
             {
@@ -96,13 +100,13 @@ namespace Services
 
             try
             {
-                await SaveDataCountry(countries);
+                await SaveDataCountryAsync(countries);
 
-                await SaveDataCurrency(countries);
+                await SaveDataCurrencyAsync(countries);
 
-                await SaveDataCountryCurrency(countries);
+                await SaveDataCountryCurrencyAsync(countries);
 
-                await SaveDataRates(rates);
+                await SaveDataRatesAsync(rates);
 
                 connection.Close();
             }
@@ -112,7 +116,7 @@ namespace Services
             }
         }
 
-        private async Task SaveDataCountry(List<Country> countries)
+        private async Task SaveDataCountryAsync(List<Country> countries)
         {
             try
             {
@@ -140,12 +144,10 @@ namespace Services
             }
         }
 
-        private async Task SaveDataCurrency(List<Country> countries)
+        private async Task SaveDataCurrencyAsync(List<Country> countries)
         {
             try
             {
-
-
                 List<string> ListCurrencyDist = new List<string>();
 
                 foreach (var ct in countries)
@@ -183,7 +185,7 @@ namespace Services
             }
         }
 
-        private async Task SaveDataCountryCurrency(List<Country> countries)
+        private async Task SaveDataCountryCurrencyAsync(List<Country> countries)
         {
             try
             {
@@ -204,7 +206,7 @@ namespace Services
             }
         }
 
-        private async Task SaveDataRates(List<Rate> rates)
+        private async Task SaveDataRatesAsync(List<Rate> rates)
         {
             try
             {
@@ -222,7 +224,7 @@ namespace Services
             }
         }
 
-        public List<Country> GetCountryData()
+        public List<Country> GetCountryDataAsync()
         {
             List<Country> Countries = new List<Country>();
 
@@ -290,25 +292,27 @@ namespace Services
             }
         }
 
-        public async Task DeleteData()
+        public async Task DeleteDataAsync()
         {
             try
             {
                 string sql = "DELETE FROM Country";
                 command = new SQLiteCommand(sql, connection);
+                await Task.Run(() => command.ExecuteNonQueryAsync());
 
                 sql = "DELETE FROM Currency";
                 command = new SQLiteCommand(sql, connection);
+                await Task.Run(() => command.ExecuteNonQueryAsync());
 
                 sql = "DELETE FROM CountryCurrency";
                 command = new SQLiteCommand(sql, connection);
-                
+                await Task.Run(() => command.ExecuteNonQueryAsync());
+
                 sql = "DELETE FROM Rate";
                 command = new SQLiteCommand(sql, connection);
-
                 await Task.Run(() => command.ExecuteNonQueryAsync());
             }
-            catch (Exception ex)
+            catch (SqlException ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
             }
