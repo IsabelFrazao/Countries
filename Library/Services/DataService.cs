@@ -1,14 +1,17 @@
 ﻿using Library;
 using Library.Models;
+using ServiceStack;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Documents;
 
@@ -26,6 +29,13 @@ namespace Services
         {
             dialogService = new DialogService();
 
+            var pointCulture = new CultureInfo("en")
+            {
+                NumberFormat = { NumberDecimalSeparator = "." }
+            };
+
+            Thread.CurrentThread.CurrentCulture = pointCulture;
+
             if (!Directory.Exists("Data"))
             {
                 Directory.CreateDirectory("Data");
@@ -42,7 +52,9 @@ namespace Services
                 string sqlcommand = "CREATE TABLE IF NOT EXISTS CountryCurrency(" +
                                     "CountryCode varchar(3)," +
                                     "CurrencyCode varchar(3)," +
-                                    "primary key(CountryCode, CurrencyCode))";
+                                    "Primary Key(CountryCode, CurrencyCode)," +
+                                    "Foreign Key(CountryCode) references Country(Alpha3Code)," +
+                                    "Foreign Key(CurrencyCode) references Currency(Code))";
 
                 command = new SQLiteCommand(sqlcommand, connection);
                 command.ExecuteNonQuery();
@@ -55,8 +67,7 @@ namespace Services
                              "SubRegion varchar(50), " +
                              "Population int, " +
                              "GINI real, " +
-                             "Flag varchar(10)," +
-                             "FOREIGN KEY (Alpha3Code) REFERENCES CountryCurrency(CountryCode))";
+                             "Flag varchar(100))";
 
                 command = new SQLiteCommand(sqlcommand, connection);
                 command.ExecuteNonQuery();
@@ -64,8 +75,7 @@ namespace Services
                 sqlcommand = "CREATE TABLE IF NOT EXISTS Currency(" +
                              "Code varchar(3) primary key," +
                              "Name char(250), " +
-                             "Symbol varchar(3)," +
-                             "foreign key (Code) references CountryCurrency(CurrencyCode))";
+                             "Symbol varchar(3))";
 
                 command = new SQLiteCommand(sqlcommand, connection);
                 command.ExecuteNonQuery();
@@ -78,10 +88,6 @@ namespace Services
 
                 command = new SQLiteCommand(sqlcommand, connection);
                 command.ExecuteNonQuery();
-
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
             }
             catch (Exception ex)
             {
@@ -91,20 +97,26 @@ namespace Services
 
         public async Task SaveData(List<Country> countries, List<Rate> rates)
         {
-            var pointCulture = new CultureInfo("en")
-            {
-                NumberFormat = { NumberDecimalSeparator = "." }
-            };
-
-            Thread.CurrentThread.CurrentCulture = pointCulture;
-
             try
             {
-                await SaveDataCountryAsync(countries);
+                List<string> ListCurrencyDist = new List<string>();
 
-                await SaveDataCurrencyAsync(countries);
+                foreach (var country in countries)
+                {
+                    await SaveDataCountryAsync(country);
 
-                await SaveDataCountryCurrencyAsync(countries);
+                    foreach (var currency in country.Currencies)
+                    {
+                        if (!ListCurrencyDist.Contains(currency.code))
+                        {
+                            await SaveDataCurrencyAsync(currency);
+
+                            ListCurrencyDist.Add(currency.code);
+                        }
+
+                        await SaveDataCountryCurrencyAsync(country, currency);
+                    }
+                }
 
                 await SaveDataRatesAsync(rates);
 
@@ -116,91 +128,59 @@ namespace Services
             }
         }
 
-        private async Task SaveDataCountryAsync(List<Country> countries)
+        private async Task SaveDataCountryAsync(Country country)
         {
             try
             {
-                foreach (var country in countries)
-                {
-                    var countryFlag = $"{country.Flag.Split('/')[4].Split('.')[0]}.jpg";
+                if (country.Gini == null)
+                    country.Gini = 0;
 
-                    if (country.Gini == null)
-                        country.Gini = 0;
+                if (country.Name.Contains("'"))
+                    country.Name = country.Name.Replace("'", "");
+                if (country.Capital.Contains("'"))
+                    country.Capital = country.Capital.Replace("'", "");
 
-                    if (country.Name.Contains("'"))
-                        country.Name = country.Name.Replace("'", "");
-                    if (country.Capital.Contains("'"))
-                        country.Capital = country.Capital.Replace("'", "");
+                string sqlcountries = $"INSERT INTO Country VALUES ('{country.Alpha3Code}', '{country.Name}', '{country.Capital}', '{country.Region}', '{country.SubRegion}', {country.Population}, {country.Gini}, '{country.Flag}')";
+                command = new SQLiteCommand(sqlcountries, connection);
 
-                    string sqlcountries = $"INSERT INTO Country VALUES ('{country.Alpha3Code}', '{country.Name}', '{country.Capital}', '{country.Region}', '{country.SubRegion}', {country.Population}, {country.Gini}, '{countryFlag}')";
-                    command = new SQLiteCommand(sqlcountries, connection);
-
-                    await Task.Run(() => command.ExecuteNonQueryAsync());
-                }
+                await Task.Run(() => command.ExecuteNonQuery());
             }
-            catch (Exception ex)
+            catch (SqlException ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
             }
         }
 
-        private async Task SaveDataCurrencyAsync(List<Country> countries)
+        private async Task SaveDataCurrencyAsync(Currency currency)
         {
             try
             {
-                List<string> ListCurrencyDist = new List<string>();
+                if (currency.name == null)
+                    currency.name = string.Empty;
+                if (currency.name.Contains("'") && currency.name != null)
+                    currency.name = currency.name.Replace("'", "");
 
-                foreach (var ct in countries)
-                {
-                    foreach (var currency in ct.Currencies)
-                    {
-                        if (currency.code == null)
-                            currency.code = string.Empty;
-                        if (currency.code.Contains("'") && currency.code != null)
-                            currency.code = currency.code.Replace("'", "");
-                        if (currency.name == null)
-                            currency.name = string.Empty;
-                        if (currency.name.Contains("'") && currency.name != null)
-                            currency.name = currency.name.Replace("'", "");
-                        if (currency.symbol == null)
-                            currency.symbol = string.Empty;
-                        if (currency.symbol.Contains("'") && currency.symbol != null)
-                            currency.symbol = currency.symbol.Replace("'", "");
+                string sqlCurrency = $"INSERT INTO Currency VALUES ('{currency.code}', '{currency.name}', '{currency.symbol}')";
+                command = new SQLiteCommand(sqlCurrency, connection);
 
-                        if (!ListCurrencyDist.Contains(currency.code))
-                        {
-                            string sqlCurrency = $"INSERT INTO Currency VALUES ('{currency.code}', '{currency.name}', '{currency.symbol}')";
-                            command = new SQLiteCommand(sqlCurrency, connection);
-
-                            await Task.Run(() => command.ExecuteNonQueryAsync());
-
-                            ListCurrencyDist.Add(currency.code);
-                        }
-                    }
-                }
+                await Task.Run(() => command.ExecuteNonQuery());
             }
-            catch (Exception ex)
+            catch (SqlException ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
             }
         }
 
-        private async Task SaveDataCountryCurrencyAsync(List<Country> countries)
+        private async Task SaveDataCountryCurrencyAsync(Country country, Currency currency)
         {
             try
             {
-                foreach (var country in countries)
-                {
-                    foreach (var ct in country.Currencies)
-                    {
-                        string sqlcountryCurrency = $"INSERT INTO CountryCurrency VALUES ('{country.Alpha3Code}', '{ct.code}')";
-                        command = new SQLiteCommand(sqlcountryCurrency, connection);
+                string sqlcountryCurrency = $"INSERT INTO CountryCurrency VALUES ('{country.Alpha3Code}', '{currency.code}')";
+                command = new SQLiteCommand(sqlcountryCurrency, connection);
 
-                        await Task.Run(() => command.ExecuteNonQueryAsync());
-                    }
-                }
+                await Task.Run(() => command.ExecuteNonQuery());
             }
-            catch (Exception ex)
+            catch (SqlException ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
             }
@@ -215,10 +195,10 @@ namespace Services
                     string sqlrates = $"INSERT INTO Rate VALUES ({rate.RateId}, '{rate.Code}', {rate.TaxRate}, '{rate.Name}')";
                     command = new SQLiteCommand(sqlrates, connection);
 
-                    await Task.Run(() => command.ExecuteNonQueryAsync());
+                    await Task.Run(() => command.ExecuteNonQuery());
                 }
             }
-            catch (Exception ex)
+            catch (SqlException ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
             }
@@ -230,62 +210,68 @@ namespace Services
 
             try
             {
-                string sql = "SELECT Name, Capital, Region, SubRegion, Population, Gini, Flag FROM Country";
+                string sql = "SELECT Alpha3Code, Country.Name, Capital, Region, SubRegion, Population, Gini, Flag FROM Country";
 
                 command = new SQLiteCommand(sql, connection);
-
                 SQLiteDataReader reader = command.ExecuteReader();
 
                 while (reader.Read())
                 {
                     Countries.Add(new Country
                     {
+                        Alpha3Code = (string)reader["Alpha3Code"],
                         Name = (string)reader["Name"],
                         Capital = (string)reader["Capital"],
                         Region = (string)reader["Region"],
                         SubRegion = (string)reader["SubRegion"],
                         Population = (int)reader["Population"],
                         Gini = (double)reader["Gini"],
-                        Flag = (string)reader["Flag"]
+                        Flag = (string)reader["Flag"],
                     });
                 }
+
+                foreach (var country in Countries)
+                {
+                    country.Currencies = (GetCurrencyData(country.Alpha3Code));
+                }
+
                 connection.Close();
 
                 return Countries;
             }
-            catch (Exception ex)
+            catch (SqlException ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
                 return null;
             }
         }
 
-        public List<Currency> GetCurrencyData()
+        public List<Currency> GetCurrencyData(string alpha3code)
         {
             List<Currency> Currencies = new List<Currency>();
 
             try
             {
-                string sql = "SELECT Code, Name, Symbol FROM Currency";
+                string sql = "SELECT Currency.Code, Currency.Name, Currency.Symbol FROM Currency " +
+                    "INNER JOIN CountryCurrency ON CountryCurrency.CurrencyCode = Currency.Code " +
+                    $"WHERE CountryCurrency.CountryCode = '{alpha3code}'";
 
                 command = new SQLiteCommand(sql, connection);
-
                 SQLiteDataReader reader = command.ExecuteReader();
 
                 while (reader.Read())
                 {
                     Currencies.Add(new Currency
                     {
-                        code = (string)reader["Code"],
-                        name = (string)reader["Name"],
+                        code = (string)reader["code"],
+                        name = (string)reader["name"],
                         symbol = (string)reader["symbol"]
                     });
                 }
-                connection.Close();
 
                 return Currencies;
             }
-            catch (Exception ex)
+            catch (SqlException ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
                 return null;
@@ -298,19 +284,19 @@ namespace Services
             {
                 string sql = "DELETE FROM Country";
                 command = new SQLiteCommand(sql, connection);
-                await Task.Run(() => command.ExecuteNonQueryAsync());
+                await command.ExecuteNonQueryAsync();
 
                 sql = "DELETE FROM Currency";
                 command = new SQLiteCommand(sql, connection);
-                await Task.Run(() => command.ExecuteNonQueryAsync());
+                await command.ExecuteNonQueryAsync();
 
                 sql = "DELETE FROM CountryCurrency";
                 command = new SQLiteCommand(sql, connection);
-                await Task.Run(() => command.ExecuteNonQueryAsync());
+                await command.ExecuteNonQueryAsync();
 
                 sql = "DELETE FROM Rate";
                 command = new SQLiteCommand(sql, connection);
-                await Task.Run(() => command.ExecuteNonQueryAsync());
+                await command.ExecuteNonQueryAsync();
             }
             catch (SqlException ex)
             {

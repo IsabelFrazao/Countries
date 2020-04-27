@@ -5,6 +5,7 @@ using Svg;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -233,6 +234,10 @@ namespace Countries
             comboBoxConverterInput.ItemsSource = null;
             comboBoxConverterOutput.ItemsSource = null;
             comboBoxConverterOutput.Items.Clear();
+            if (txtBoxTranslatorInput.Text != "Insert the Text to Translate")
+                txtBoxTranslatorInput.Text = "Insert the Text to Translate";
+            if (txtBoxTranslatorOutput.Text != "Translated Text")
+                txtBoxTranslatorOutput.Text = "Translated Text";
 
             Country country = (Country)listBoxCountries.SelectedItem;
 
@@ -259,19 +264,28 @@ namespace Countries
             }
             img.EndInit();
             imageFlag1.Source = img;
+            imageFlag1.Stretch = Stretch.Fill;
 
-            List<string> LangDistinct = new List<string>();
-
-            foreach (var ct in Countries)
+            if(country.Languages != null)
             {
-                foreach (var lg in ct.Languages)
+                List<string> LangDistinct = new List<string>();
+
+                foreach (var ct in Countries)
                 {
-                    if (!LangDistinct.Contains(lg.ToString()))
-                        LangDistinct.Add(lg.ToString());
+                    foreach (var lg in ct.Languages)
+                    {
+                        if (!LangDistinct.Contains(lg.ToString()))
+                            LangDistinct.Add(lg.ToString());
+                    }
+                }
+
+                comboBoxTranslatorInput.ItemsSource = LangDistinct;
+
+                foreach (var lg in country.Languages)
+                {
+                    comboBoxTranslatorOutput.Items.Add(lg.ToString());
                 }
             }
-
-            comboBoxTranslatorInput.ItemsSource = LangDistinct;
 
             comboBoxConverterInput.ItemsSource = Rates;
             
@@ -286,11 +300,6 @@ namespace Countries
 
             if (comboBoxConverterOutput.Items.Count == 0)
                 comboBoxConverterOutput.Text = "Unable to Convert";
-
-            foreach (var lg in country.Languages)
-            {
-                comboBoxTranslatorOutput.Items.Add(lg.ToString());
-            }
         }
 
         private async void ConvertAsync()
