@@ -17,8 +17,10 @@ namespace Services
 {
     public class ApiService
     {
-        public async Task<Response> GetCountries(string urlBase, string controller)
+        public async Task<Response> GetCountries(string urlBase, string controller, IProgress<ProgressReport> progress)
         {
+            ProgressReport report = new ProgressReport();
+
             try
             {
                 var client = new HttpClient
@@ -40,7 +42,11 @@ namespace Services
                 }
 
                 var countries = JsonConvert.DeserializeObject<List<Country>>(result);
-                
+
+                report.SaveCountries = countries;
+                report.PercentageComplete = (report.SaveCountries.Count * 100) / countries.Count;
+                progress.Report(report);
+
                 return new Response
                 {
                     IsSuccess = true,
@@ -102,8 +108,10 @@ namespace Services
             }
         }
 
-        public async Task<Response> GetRates(string urlBase, string controller)
+        public async Task<Response> GetRates(string urlBase, string controller, IProgress<ProgressReport> progress)
         {
+            ProgressReport report = new ProgressReport();
+
             try
             {
                 var client = new HttpClient
@@ -125,6 +133,10 @@ namespace Services
                 }
 
                 var rates = JsonConvert.DeserializeObject<List<Rate>>(result);
+
+                report.SaveRates = rates;
+                report.PercentageComplete = (report.SaveRates.Count * 100) / rates.Count;
+                progress.Report(report);
 
                 return new Response
                 {

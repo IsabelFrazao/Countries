@@ -37,7 +37,7 @@ namespace Countries
 
         private DataService dataService;
 
-        List<Rate> Rates = new List<Rate>();
+        List<Rate> Rates = new List<Rate>();        
         #endregion
 
         public MainWindow()
@@ -54,7 +54,12 @@ namespace Countries
 
             LoadCountriesAsync();
 
-            ConvertAsync();
+            ConvertAsync();            
+        }
+
+        private void ReportProgress(object sender, ProgressReport e)
+        {
+            ProgressBarCountries.Value = e.PercentageComplete;
         }
 
         private async void LoadCountriesAsync()//Tests the Internet Connection
@@ -104,12 +109,18 @@ namespace Countries
 
         private void LoadLocalCountries()
         {
-            Countries = dataService.GetCountryDataAsync();
+            Progress<ProgressReport> progress = new Progress<ProgressReport>();
+            progress.ProgressChanged += ReportProgress;
+
+            Countries = dataService.GetCountryDataAsync(progress);
         }
 
         private async Task LoadApiCountries()
         {
-            var response = await apiService.GetCountries("http://restcountries.eu", "/rest/v2/all");
+            Progress<ProgressReport> progress = new Progress<ProgressReport>();
+            progress.ProgressChanged += ReportProgress;
+
+            var response = await apiService.GetCountries("http://restcountries.eu", "/rest/v2/all", progress);
 
             Countries = (List<Country>)response.Result;
         }
@@ -210,10 +221,10 @@ namespace Countries
 
         private void txtBoxCountries_TextChanged(object sender, TextChangedEventArgs e)
         {
-            listBoxCountries.ItemsSource = null;
-
-            if (Countries != null)
+            if (Countries != null && !string.IsNullOrEmpty(txtBoxCountries.Text))
             {
+                listBoxCountries.ItemsSource = null;
+
                 var aux = Countries.FindAll(x => x.Name.ToLower().Contains(txtBoxCountries.Text.ToLower())).ToList();
 
                 listBoxCountries.ItemsSource = aux;
@@ -227,86 +238,17 @@ namespace Countries
 
         private void btnCountryOK_Click(object sender, RoutedEventArgs e)
         {
-            labelResult.Content = string.Empty;
-            comboBoxTranslatorInput.ItemsSource = null;
-            comboBoxTranslatorOutput.ItemsSource = null;
-            comboBoxTranslatorOutput.Items.Clear();
-            comboBoxConverterInput.ItemsSource = null;
-            comboBoxConverterOutput.ItemsSource = null;
-            comboBoxConverterOutput.Items.Clear();
-            if (txtBoxTranslatorInput.Text != "Insert the Text to Translate")
-                txtBoxTranslatorInput.Text = "Insert the Text to Translate";
-            if (txtBoxTranslatorOutput.Text != "Translated Text")
-                txtBoxTranslatorOutput.Text = "Translated Text";
-
-            Country country = (Country)listBoxCountries.SelectedItem;
-
-            labelName.Content = country.Name;
-            labelCapital.Content = country.Capital;
-            labelRegion.Content = country.Region;
-            labelSubRegion.Content = country.SubRegion;
-            labelPopulation.Content = country.Population;
-            labelGini.Content = country.Gini;
-
-            string flagNameAbrev = country.Flag.Split('/')[4];
-
-            string flagAbrev = flagNameAbrev.Split('.')[0];
-            BitmapImage img = new BitmapImage();
-            img.BeginInit();
-            if (File.Exists(Environment.CurrentDirectory + "/Flags" + $"/{flagAbrev}.jpg"))
-            {
-                img.UriSource = new Uri(Environment.CurrentDirectory + "/Flags" + $"/{flagAbrev}.jpg");
-            }
-            else
-            {
-                img.UriSource = new Uri(Environment.CurrentDirectory + "/flagUnavailable.jpg");
-                imageFlag1.Stretch = Stretch.None;
-            }
-            img.EndInit();
-            imageFlag1.Source = img;
-            imageFlag1.Stretch = Stretch.Fill;
-
-            if(country.Languages != null)
-            {
-                List<string> LangDistinct = new List<string>();
-
-                foreach (var ct in Countries)
-                {
-                    foreach (var lg in ct.Languages)
-                    {
-                        if (!LangDistinct.Contains(lg.ToString()))
-                            LangDistinct.Add(lg.ToString());
-                    }
-                }
-
-                comboBoxTranslatorInput.ItemsSource = LangDistinct;
-
-                foreach (var lg in country.Languages)
-                {
-                    comboBoxTranslatorOutput.Items.Add(lg.ToString());
-                }
-            }
-
-            comboBoxConverterInput.ItemsSource = Rates;
             
-            foreach (var cr in country.Currencies)
-            {
-                foreach (var rate in Rates)
-                {
-                    if (cr.code.ToLower() == rate.Code.ToLower() && cr.code != null)
-                        comboBoxConverterOutput.Items.Add(rate);
-                }
-            }
-
-            if (comboBoxConverterOutput.Items.Count == 0)
-                comboBoxConverterOutput.Text = "Unable to Convert";
         }
 
         private async void ConvertAsync()
         {
-            var response = await apiService.GetRates("https://cambiosrafa.azurewebsites.net", "/api/rates");
+            Progress<ProgressReport> progress = new Progress<ProgressReport>();
+            progress.ProgressChanged += ReportProgress;
 
-            Rates = (List<Rate>)response.Result;
+            var response = await apiService.GetRates("https://cambiosrafa.azurewebsites.net", "/api/rates", progress);
+
+            Rates = (List<Rate>)response.Result;         
         }
 
         private void txtBoxCountries_GotFocus(object sender, RoutedEventArgs e)
@@ -428,6 +370,91 @@ namespace Countries
                 var text = txtBoxConverterInput.Text;
                 txtBoxConverterInput.Text = txtBoxConverterOutput.Text;
                 txtBoxConverterOutput.Text = text;
+            }
+        }
+
+        private void listBoxCountries_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            labelResult.Content = string.Empty;
+            comboBoxTranslatorInput.ItemsSource = null;
+            comboBoxTranslatorOutput.ItemsSource = null;
+            comboBoxTranslatorOutput.Items.Clear();
+            comboBoxConverterInput.ItemsSource = null;
+            comboBoxConverterOutput.ItemsSource = null;
+            comboBoxConverterOutput.Items.Clear();
+            if (txtBoxTranslatorInput.Text != "Insert the Text to Translate")
+                txtBoxTranslatorInput.Text = "Insert the Text to Translate";
+            if (txtBoxTranslatorOutput.Text != "Translated Text")
+                txtBoxTranslatorOutput.Text = "Translated Text";
+
+            Country country = (Country)listBoxCountries.SelectedItem;
+
+            if (country != null)
+            {
+                labelName.Content = country.Name;
+                labelCapital.Content = country.Capital;
+                labelRegion.Content = country.Region;
+                labelSubRegion.Content = country.SubRegion;
+                labelPopulation.Content = country.Population;
+                labelGini.Content = country.Gini;
+
+                string flagNameAbrev = country.Flag.Split('/')[4];
+
+                string flagAbrev = flagNameAbrev.Split('.')[0];
+                BitmapImage img = new BitmapImage();
+                img.BeginInit();
+                if (File.Exists(Environment.CurrentDirectory + "/Flags" + $"/{flagAbrev}.jpg"))
+                {
+                    img.UriSource = new Uri(Environment.CurrentDirectory + "/Flags" + $"/{flagAbrev}.jpg");
+                }
+                else
+                {
+                    img.UriSource = new Uri(Environment.CurrentDirectory + "/flagUnavailable.jpg");
+                    imageFlag1.Stretch = Stretch.None;
+                }
+                img.EndInit();
+                imageFlag1.Source = img;
+                imageFlag1.Stretch = Stretch.Fill;
+
+                List<string> LangDistinct = new List<string>();
+
+
+                if (country.Languages != null)
+                {
+
+                    foreach (var ct in Countries)
+                    {
+                        foreach (var lg in ct.Languages)
+                        {
+                            if (!LangDistinct.Contains(lg.ToString()))
+                                LangDistinct.Add(lg.ToString());
+                        }
+                    }
+
+                }
+                comboBoxTranslatorInput.ItemsSource = LangDistinct;
+
+                if(country.Languages != null)
+                {
+                    foreach (var lg in country.Languages)
+                    {
+                        comboBoxTranslatorOutput.Items.Add(lg.ToString());
+                    }
+                }
+                
+                comboBoxConverterInput.ItemsSource = Rates;
+
+                foreach (var cr in country.Currencies)
+                {
+                    foreach (var rate in Rates)
+                    {
+                        if (cr.code.ToLower() == rate.Code.ToLower() && cr.code != null)
+                            comboBoxConverterOutput.Items.Add(rate);
+                    }
+                }
+
+                if (comboBoxConverterOutput.Items.Count == 0)
+                    comboBoxConverterOutput.Text = "Unable to Convert";
             }
         }
     }

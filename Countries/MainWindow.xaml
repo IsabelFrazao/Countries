@@ -39,9 +39,8 @@
         <Button x:Name="btnTranslate" Content="Translate" FontWeight="Bold" Grid.Column="1" HorizontalAlignment="Left" Margin="190,367,0,0" VerticalAlignment="Top" Width="223" Height="22" Click="btnTranslate_Click"/>
         <ComboBox x:Name="comboBoxTranslatorInput" Grid.Column="1" HorizontalAlignment="Left" Margin="72,154,0,0" VerticalAlignment="Top" Width="223"/>
         <ComboBox x:Name="comboBoxTranslatorOutput" Grid.Column="1" HorizontalAlignment="Left" Margin="307,154,0,0" VerticalAlignment="Top" Width="223"/>
-        <ListBox x:Name="listBoxCountries" HorizontalAlignment="Left" Height="453" Margin="46,146,0,0" VerticalAlignment="Top" Width="189"/>
+        <ListBox x:Name="listBoxCountries" HorizontalAlignment="Left" Height="478" Margin="46,121,0,0" VerticalAlignment="Top" Width="189" SelectionChanged="listBoxCountries_SelectionChanged"/>
         <TextBox x:Name="txtBoxCountries" HorizontalAlignment="Left" Height="23" Margin="46,93,0,0" TextWrapping="Wrap" Text="Search for a Country" VerticalAlignment="Top" Width="189" TextChanged="txtBoxCountries_TextChanged" GotFocus="txtBoxCountries_GotFocus"/>
-        <Button x:Name="btnCountryOK" Content="OK" FontWeight="Bold" HorizontalAlignment="Left" Margin="46,121,0,0" VerticalAlignment="Top" Width="189" Click="btnCountryOK_Click"/>
         <Label x:Name="labelSelectLang" Content="Choose a Language:" HorizontalAlignment="Left" Margin="72,128,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="223" Grid.Column="1"/>
         <Label x:Name="labelSelectLangCountry" Content="Choose a Language from this Country:" HorizontalAlignment="Left" Margin="307,128,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="236" Grid.Column="1"/>
         <Label x:Name="labelSelectCurrency" Content="Choose a Currency:" HorizontalAlignment="Left" Margin="72,450,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="223" Grid.Column="1"/>
@@ -54,5 +53,6 @@
         <Button x:Name="btnSwitchCurrency" HorizontalAlignment="Left" Margin="281,554,0,0" VerticalAlignment="Top" Width="40" Height="28" Grid.Column="1" Click="btnSwitchCurrency_Click">
             <Image Source="images.png" Height="25" Width="37" />
         </Button>
+        <ProgressBar x:Name="ProgressBarCountries" HorizontalAlignment="Left" Height="26" Margin="0,634,-0.4,0" VerticalAlignment="Top" Width="1394" Grid.ColumnSpan="2"/>
     </Grid>
 </Window>

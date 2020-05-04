@@ -97,10 +97,10 @@ namespace Services
 
         public async Task SaveData(List<Country> countries, List<Rate> rates)
         {
+            List<string> ListCurrencyDist = new List<string>();
+
             try
             {
-                List<string> ListCurrencyDist = new List<string>();
-
                 foreach (var country in countries)
                 {
                     await SaveDataCountryAsync(country);
@@ -113,7 +113,6 @@ namespace Services
 
                             ListCurrencyDist.Add(currency.code);
                         }
-
                         await SaveDataCountryCurrencyAsync(country, currency);
                     }
                 }
@@ -143,7 +142,7 @@ namespace Services
                 string sqlcountries = $"INSERT INTO Country VALUES ('{country.Alpha3Code}', '{country.Name}', '{country.Capital}', '{country.Region}', '{country.SubRegion}', {country.Population}, {country.Gini}, '{country.Flag}')";
                 command = new SQLiteCommand(sqlcountries, connection);
 
-                await Task.Run(() => command.ExecuteNonQuery());
+                await Task.Run(() => command.ExecuteNonQuery());                
             }
             catch (SqlException ex)
             {
@@ -204,9 +203,10 @@ namespace Services
             }
         }
 
-        public List<Country> GetCountryDataAsync()
+        public List<Country> GetCountryDataAsync(IProgress<ProgressReport> progress)
         {
             List<Country> Countries = new List<Country>();
+            ProgressReport report = new ProgressReport();
 
             try
             {
@@ -234,6 +234,10 @@ namespace Services
                 {
                     country.Currencies = (GetCurrencyData(country.Alpha3Code));
                 }
+
+                report.SaveCountries = Countries;
+                report.PercentageComplete = (report.SaveCountries.Count * 100) / Countries.Count;
+                progress.Report(report);
 
                 connection.Close();
 
