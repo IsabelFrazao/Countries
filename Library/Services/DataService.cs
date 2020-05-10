@@ -235,6 +235,8 @@ namespace Services
                     country.Currencies = (GetCurrencyData(country.Alpha3Code));
                 }
 
+                GetRatesData();
+
                 report.SaveCountries = Countries;
                 report.PercentageComplete = (report.SaveCountries.Count * 100) / Countries.Count;
                 progress.Report(report);
@@ -281,6 +283,38 @@ namespace Services
                 return null;
             }
         }
+        
+        public List<Rate> GetRatesData()
+        {
+            List<Rate> Rates = new List<Rate>();
+
+            try
+            {
+                string sql = "SELECT RateId, Code, TaxRate, Name FROM Rate";
+
+                command = new SQLiteCommand(sql, connection);
+
+                SQLiteDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    Rates.Add(new Rate
+                    {
+                        RateId = (int)reader["RateId"],
+                        Code = (string)reader["Code"],
+                        TaxRate = Convert.ToDouble((string)reader["TaxRate"]),
+                        Name = (string)reader["Name"]
+                    });
+                }
+
+                return Rates;
+            }
+            catch (SqlException ex)
+            {
+                dialogService.ShowMessage("Error", ex.Message);
+                return null;
+            }
+        }
 
         public async Task DeleteDataAsync()
         {
@@ -307,5 +341,7 @@ namespace Services
                 dialogService.ShowMessage("Error", ex.Message);
             }
         }
+
+
     }
 }
