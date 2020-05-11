@@ -61,13 +61,13 @@ namespace Services
 
                 sqlcommand = "CREATE TABLE IF NOT EXISTS Country(" +
                              "Alpha3Code varchar(3) primary key not null, " +
+                             "Alpha2Code varchar(2)," +
                              "Name varchar(50), " +
                              "Capital varchar(50), " +
                              "Region varchar(50), " +
                              "SubRegion varchar(50), " +
                              "Population int, " +
-                             "GINI real, " +
-                             "Flag varchar(100))";
+                             "GINI real)";
 
                 command = new SQLiteCommand(sqlcommand, connection);
                 command.ExecuteNonQuery();
@@ -95,8 +95,10 @@ namespace Services
             }
         }
 
-        public async Task SaveData(List<Country> countries, List<Rate> rates)
+        public async Task SaveData(List<Country> countries, List<Rate> rates, IProgress<ProgressReport> progress)
         {
+            ProgressReport report = new ProgressReport();
+
             List<string> ListCurrencyDist = new List<string>();
 
             try
@@ -115,11 +117,13 @@ namespace Services
                         }
                         await SaveDataCountryCurrencyAsync(country, currency);
                     }
+
+                    report.SaveCountries.Add(country);
+                    report.PercentageComplete = (report.SaveCountries.Count * 100) / countries.Count;
+                    progress.Report(report);
                 }
 
-                await SaveDataRatesAsync(rates);
-
-                connection.Close();
+                await SaveDataRatesAsync(rates, progress);
             }
             catch (Exception ex)
             {
@@ -139,10 +143,10 @@ namespace Services
                 if (country.Capital.Contains("'"))
                     country.Capital = country.Capital.Replace("'", "");
 
-                string sqlcountries = $"INSERT INTO Country VALUES ('{country.Alpha3Code}', '{country.Name}', '{country.Capital}', '{country.Region}', '{country.SubRegion}', {country.Population}, {country.Gini}, '{country.Flag}')";
+                string sqlcountries = $"INSERT OR IGNORE INTO Country VALUES ('{country.Alpha3Code}', '{country.Alpha2Code}', '{country.Name}', '{country.Capital}', '{country.Region}', '{country.SubRegion}', {country.Population}, {country.Gini})";// WHERE NOT EXISTS(SELECT 1 FROM Country WHERE Country.Alpha3Code = '{country.Alpha3Code}')";
                 command = new SQLiteCommand(sqlcountries, connection);
 
-                await Task.Run(() => command.ExecuteNonQuery());                
+                await Task.Run(() => command.ExecuteNonQuery());
             }
             catch (SqlException ex)
             {
@@ -159,7 +163,7 @@ namespace Services
                 if (currency.name.Contains("'") && currency.name != null)
                     currency.name = currency.name.Replace("'", "");
 
-                string sqlCurrency = $"INSERT INTO Currency VALUES ('{currency.code}', '{currency.name}', '{currency.symbol}')";
+                string sqlCurrency = $"INSERT OR IGNORE INTO Currency VALUES ('{currency.code}', '{currency.name}', '{currency.symbol}')";
                 command = new SQLiteCommand(sqlCurrency, connection);
 
                 await Task.Run(() => command.ExecuteNonQuery());
@@ -174,7 +178,7 @@ namespace Services
         {
             try
             {
-                string sqlcountryCurrency = $"INSERT INTO CountryCurrency VALUES ('{country.Alpha3Code}', '{currency.code}')";
+                string sqlcountryCurrency = $"INSERT OR IGNORE INTO CountryCurrency VALUES ('{country.Alpha3Code}', '{currency.code}')";
                 command = new SQLiteCommand(sqlcountryCurrency, connection);
 
                 await Task.Run(() => command.ExecuteNonQuery());
@@ -185,16 +189,22 @@ namespace Services
             }
         }
 
-        private async Task SaveDataRatesAsync(List<Rate> rates)
+        private async Task SaveDataRatesAsync(List<Rate> rates, IProgress<ProgressReport> progress)
         {
+            ProgressReport report = new ProgressReport();
+
             try
             {
                 foreach (var rate in rates)
                 {
-                    string sqlrates = $"INSERT INTO Rate VALUES ({rate.RateId}, '{rate.Code}', {rate.TaxRate}, '{rate.Name}')";
+                    string sqlrates = $"INSERT OR IGNORE INTO Rate VALUES ({rate.RateId}, '{rate.Code}', {rate.TaxRate}, '{rate.Name}')";
                     command = new SQLiteCommand(sqlrates, connection);
 
                     await Task.Run(() => command.ExecuteNonQuery());
+
+                    report.SaveRates.Add(rate);
+                    report.PercentageComplete = (report.SaveRates.Count * 100) / rates.Count;
+                    progress.Report(report);
                 }
             }
             catch (SqlException ex)
@@ -210,7 +220,7 @@ namespace Services
 
             try
             {
-                string sql = "SELECT Alpha3Code, Country.Name, Capital, Region, SubRegion, Population, Gini, Flag FROM Country";
+                string sql = "SELECT Alpha3Code, Alpha2Code, Country.Name, Capital, Region, SubRegion, Population, Gini FROM Country";
 
                 command = new SQLiteCommand(sql, connection);
                 SQLiteDataReader reader = command.ExecuteReader();
@@ -220,13 +230,13 @@ namespace Services
                     Countries.Add(new Country
                     {
                         Alpha3Code = (string)reader["Alpha3Code"],
+                        Alpha2Code = (string)reader["Alpha2Code"],
                         Name = (string)reader["Name"],
                         Capital = (string)reader["Capital"],
                         Region = (string)reader["Region"],
                         SubRegion = (string)reader["SubRegion"],
                         Population = (int)reader["Population"],
-                        Gini = (double)reader["Gini"],
-                        Flag = (string)reader["Flag"],
+                        Gini = (double?)reader["Gini"],
                     });
                 }
 
@@ -283,7 +293,7 @@ namespace Services
                 return null;
             }
         }
-        
+
         public List<Rate> GetRatesData()
         {
             List<Rate> Rates = new List<Rate>();
@@ -302,7 +312,7 @@ namespace Services
                     {
                         RateId = (int)reader["RateId"],
                         Code = (string)reader["Code"],
-                        TaxRate = Convert.ToDouble((string)reader["TaxRate"]),
+                        TaxRate = Convert.ToDouble((double)reader["TaxRate"]),
                         Name = (string)reader["Name"]
                     });
                 }
@@ -341,7 +351,5 @@ namespace Services
                 dialogService.ShowMessage("Error", ex.Message);
             }
         }
-
-
     }
 }

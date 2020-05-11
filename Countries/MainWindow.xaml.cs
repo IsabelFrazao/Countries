@@ -33,21 +33,13 @@ namespace Countries
     {
         #region Atributos
         private List<Country> Countries;
-
         private NetworkService networkService;
-
         private ApiService apiService;
-
         private DialogService dialogService;
-
         private DataService dataService;
-
-        List<Rate> Rates = new List<Rate>();
-
+        private List<Rate> Rates = new List<Rate>();
         private MediaPlayer mediaPlayer = new MediaPlayer();
-
         private bool userIsDraggingSlider = false;
-
         #endregion
 
         public MainWindow()
@@ -67,13 +59,11 @@ namespace Countries
             ConvertAsync();
         }
 
-        private void ReportProgress(object sender, ProgressReport e)
-        {
-            ProgressBarCountries.Value = e.PercentageComplete;
-        }
-
         private async void LoadCountriesAsync()//Tests the Internet Connection
         {
+            Progress<ProgressReport> progress = new Progress<ProgressReport>();
+            progress.ProgressChanged += ReportProgress;
+
             bool load;
 
             labelResult.Content = "Loading...";
@@ -87,13 +77,12 @@ namespace Countries
             }
             else
             {
-                await LoadApiCountries();
-                if (!Directory.Exists("Flags"))
-                    GetFlags(Countries);
-                if (!Directory.Exists("Audio"))
-                    GetAudio(Countries);
+                await LoadApiCountriesAsync();
+                await GetFlagsAsync(Countries);
+                await GetMapsAsync(Countries);
+                await GetAudioAsync(Countries);
                 //if (!Directory.Exists("Geography"))
-                   // await GetGeographyTextAsync(Countries);
+                // await GetGeographyTextAsync(Countries);
                 load = true;
             }
 
@@ -110,53 +99,19 @@ namespace Countries
 
             if (load)
             {
-                labelResult.Content = "Loaded Successfully";//"(Loaded from the Internet on\n  {0:F}", DateTime.Now)  
+                labelResult.Content = "Loaded Successfully Online";//"(Loaded from the Internet on\n  {0:F}", DateTime.Now)  
 
-                await dataService.DeleteDataAsync();
+                //await dataService.DeleteDataAsync();
 
-                await dataService.SaveData(Countries, Rates);
+                await dataService.SaveData(Countries, Rates, progress);
             }
             else
             {
-                labelResult.Content = string.Format("Loaded Successfully from the Database");
+                labelResult.Content = string.Format("Loaded Successfully Offline");
             }
         }
 
-        private void GetAudio(List<Country> countries)
-        {
-            if (!Directory.Exists("Audio"))
-            {
-                Directory.CreateDirectory("Audio");
-            }
-
-            foreach (var country in countries)
-            {
-                if (!File.Exists(Environment.CurrentDirectory + "/Audio" + $"/{country.Alpha2Code.ToLower()}.mp3"))
-                {
-                    try
-                    {
-                        using (var client = new WebClient())
-                        {
-                            client.DownloadFile("http://www.nationalanthems.info/" + $"{country.Alpha2Code.ToLower()}.mp3", @"Audio\" + $"{country.Alpha2Code.ToLower()}.mp3");
-                        }
-                    }
-                    catch
-                    {
-                        continue;
-                    }
-                }
-            }            
-        }
-
-        private void LoadLocalCountries()
-        {
-            Progress<ProgressReport> progress = new Progress<ProgressReport>();
-            progress.ProgressChanged += ReportProgress;
-
-            Countries = dataService.GetCountryDataAsync(progress);
-        }
-
-        private async Task LoadApiCountries()
+        private async Task LoadApiCountriesAsync()
         {
             Progress<ProgressReport> progress = new Progress<ProgressReport>();
             progress.ProgressChanged += ReportProgress;
@@ -166,7 +121,7 @@ namespace Countries
             Countries = (List<Country>)response.Result;
         }
 
-        private void GetFlags(List<Country> countries)
+        private async Task GetFlagsAsync(List<Country> countries)
         {
             //Se a pasta Flags não existir, criar
             if (!Directory.Exists("Flags"))
@@ -176,27 +131,21 @@ namespace Countries
 
             foreach (var ct in countries)
             {
-                string flagNameAb = ct.Flag.Split('/')[4].Split('.')[0];
-
-                if (!File.Exists(Environment.CurrentDirectory + "/Flags" + $"/{flagNameAb}.jpg"))
+                if (!File.Exists(Environment.CurrentDirectory + "/Flags" + $"/{ct.Alpha3Code.ToLower()}.jpg"))
                 {
                     try
-                    {
-                        //Create a Path inside the Flags Folder to save the Flag Image with the name abbreviated                    
-                        var path = @"Flags\" + $"{flagNameAb}.svg";//Path to save the image as SVG
+                    {                   
+                        var path = @"Flags\" + $"{ct.Alpha3Code.ToLower()}.svg";//Path to save the image as SVG
 
                         //Save the image as SVG from the URL
-                        string svgFileName = "https://restcountries.eu" + $"/data/{flagNameAb}";
-
+                        string svgFileName = "https://restcountries.eu" + $"/data/{ct.Alpha3Code.ToLower()}";
 
                         using (WebClient webClient = new WebClient())
                         {
-                            webClient.DownloadFile(svgFileName, path);
+                            await webClient.DownloadFileTaskAsync(svgFileName, path);
                         }
 
-                        #region Open the SVG Image and Save it in the Flags Folder as JPEG
-
-                        var path2 = @"Flags\" + $"{flagNameAb}.jpg";//Path to Save the image as JPEG
+                        var path2 = @"Flags\" + $"{ct.Alpha3Code.ToLower()}.jpg";//Path to Save the image as JPEG
 
                         //Read SVG Document from file system
                         var svgDocument = SvgDocument.Open(path);
@@ -214,8 +163,6 @@ namespace Countries
                             File.Delete(path);
                         }
                     }
-                    #endregion
-
                     catch
                     {
                         continue;
@@ -223,6 +170,182 @@ namespace Countries
                 }
             }
         }
+
+        private async Task GetMapsAsync(List<Country> countries)
+        {
+            if (!Directory.Exists("Maps"))
+            {
+                Directory.CreateDirectory("Maps");
+            }
+
+            foreach (var ct in countries)
+            {
+                if (!File.Exists(Environment.CurrentDirectory + "/Maps" + $"/{ct.Name}.gif"))
+                {
+                    try
+                    {
+                        string path1 = string.Empty;
+                        string path2 = string.Empty;
+
+                        if (ct.Name.Contains(' '))
+                            path1 = ct.Name.Replace((' '), ('-')).ToLower();
+                        else
+                            path1 = ct.Name.ToLower();
+
+                        if (ct.Name.Contains(' '))
+                            path2 = ct.Name.Replace((' '), ('_')).ToLower();
+                        else
+                            path2 = ct.Name.ToLower();
+
+                        using (WebClient webClient = new WebClient())
+                        {
+                            await webClient.DownloadFileTaskAsync("https://www.worldmap1.com/map/" + $"{path1}/" + $"where_is_{path2}_in_the_world.gif", @"Maps\" + $"{ct.Name}.gif");
+                        }
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+                }
+            }
+        }
+
+        private void LoadLocalCountries()
+        {
+            Progress<ProgressReport> progress = new Progress<ProgressReport>();
+            progress.ProgressChanged += ReportProgress;
+
+            Countries = dataService.GetCountryDataAsync(progress);
+        }
+
+        private void txtBoxCountries_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (Countries != null && !string.IsNullOrEmpty(txtBoxCountries.Text))
+            {
+                listBoxCountries.ItemsSource = null;
+
+                var aux = Countries.FindAll(x => x.Name.ToLower().Contains(txtBoxCountries.Text.ToLower())).ToList();
+
+                listBoxCountries.ItemsSource = aux;
+
+                if (aux.Count == 0)
+                {
+                    MessageBox.Show("Country does not exist");
+                }
+            }
+            else if (string.IsNullOrEmpty(txtBoxCountries.Text))
+                listBoxCountries.ItemsSource = Countries;
+        }
+
+        private void listBoxCountries_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            mediaPlayer.Close();
+            labelResult.Content = string.Empty;
+            comboBoxTranslatorInput.ItemsSource = null;
+            comboBoxTranslatorOutput.ItemsSource = null;
+            comboBoxTranslatorOutput.Items.Clear();
+            comboBoxConverterInput.ItemsSource = null;
+            comboBoxConverterOutput.ItemsSource = null;
+            comboBoxConverterOutput.Items.Clear();
+            if (txtBoxTranslatorInput.Text != "Insert the Text to Translate")
+                txtBoxTranslatorInput.Text = "Insert the Text to Translate";
+            if (txtBoxTranslatorOutput.Text != "Translated Text")
+                txtBoxTranslatorOutput.Text = "Translated Text";
+
+            Country country = (Country)listBoxCountries.SelectedItem;
+
+            if (country != null)
+            {
+                labelName.Content = country.Name;
+                labelCapital.Content = country.Capital;
+                labelRegion.Content = country.Region;
+                labelSubRegion.Content = country.SubRegion;
+                labelPopulation.Content = country.Population;
+                labelGini.Content = country.Gini;
+
+                BitmapImage img = new BitmapImage();
+                img.BeginInit();
+                if (File.Exists(Environment.CurrentDirectory + "/Flags" + $"/{country.Alpha3Code.ToLower()}.jpg"))
+                {
+                    img.UriSource = new Uri(Environment.CurrentDirectory + "/Flags" + $"/{country.Alpha3Code.ToLower()}.jpg");
+                }
+                else
+                {
+                    img.UriSource = new Uri(Environment.CurrentDirectory + "/ImageUnavailable.jpg");
+                    imageFlag1.Stretch = Stretch.None;
+                }
+                img.EndInit();
+                imageFlag1.Source = img;
+                imageFlag1.Stretch = Stretch.Fill;
+
+                BitmapImage img2 = new BitmapImage();
+                img2.BeginInit();
+                if (File.Exists(Environment.CurrentDirectory + @"\Maps\" + $"{country.Name}.gif"))
+                {
+                    img2.UriSource = new Uri(Environment.CurrentDirectory + @"\Maps\" + $"{country.Name}.gif");
+                }
+                else
+                {
+                    img2.UriSource = new Uri(Environment.CurrentDirectory + "/ImageUnavailable.jpg");
+                    imageFlag1.Stretch = Stretch.None;
+                }
+                img2.EndInit();
+                imageMap.Source = img2;
+                //imageMap.Stretch = Stretch.Fill;
+
+                List<string> LangDistinct = new List<string>();
+
+                if (country.Languages != null)
+                {
+                    foreach (var ct in Countries)
+                    {
+                        foreach (var lg in ct.Languages)
+                        {
+                            if (!LangDistinct.Contains(lg.ToString()))
+                                LangDistinct.Add(lg.ToString());
+                        }
+                    }
+
+                }
+                comboBoxTranslatorInput.ItemsSource = LangDistinct;
+
+                if (country.Languages != null)
+                {
+                    foreach (var lg in country.Languages)
+                    {
+                        comboBoxTranslatorOutput.Items.Add(lg.ToString());
+                    }
+                }
+
+                comboBoxConverterInput.ItemsSource = Rates;
+
+                foreach (var cr in country.Currencies)
+                {
+                    foreach (var rate in Rates)
+                    {
+                        if (cr.code != null)
+                        {
+                            if (cr.code.ToLower() == rate.Code.ToLower())
+                                comboBoxConverterOutput.Items.Add(rate);
+                        }
+                    }
+                }
+
+                if (comboBoxConverterOutput.Items.Count == 0)
+                    comboBoxConverterOutput.Text = "Unable to Convert";
+
+                textBoxGeography.Text = LoadGeography(country);
+
+                LoadAudio(country);
+            }
+        }
+
+        private void ReportProgress(object sender, ProgressReport e)
+        {
+            ProgressBarCountries.Value = e.PercentageComplete;
+        }
+
+        #region LANGUAGE TRANSLATOR
 
         private async void btnTranslate_Click(object sender, RoutedEventArgs e)
         {
@@ -260,22 +383,43 @@ namespace Countries
             txtBoxTranslatorInput.Text = string.Empty;
         }
 
-        private void txtBoxCountries_TextChanged(object sender, TextChangedEventArgs e)
+        private void btnSwitchLanguage_Click(object sender, RoutedEventArgs e)
         {
-            if (Countries != null && !string.IsNullOrEmpty(txtBoxCountries.Text))
+            List<string> LangList = new List<string>();
+
+            foreach (var lang in comboBoxTranslatorOutput.Items)
             {
-                listBoxCountries.ItemsSource = null;
+                LangList.Add(lang.ToString());
+            }
 
-                var aux = Countries.FindAll(x => x.Name.ToLower().Contains(txtBoxCountries.Text.ToLower())).ToList();
+            var itemIn = (string)comboBoxTranslatorInput.SelectedItem;
+            var itemOut = (string)comboBoxTranslatorOutput.SelectedItem;
 
-                listBoxCountries.ItemsSource = aux;
+            comboBoxTranslatorOutput.ItemsSource = null;
+            comboBoxTranslatorOutput.Items.Clear();
 
-                if (aux.Count == 0)
-                {
-                    MessageBox.Show("The specified country does not exist");
-                }
+            var source = comboBoxTranslatorInput.ItemsSource;
+            comboBoxTranslatorInput.ItemsSource = LangList;
+            comboBoxTranslatorOutput.ItemsSource = source;
+
+            comboBoxTranslatorInput.Text = itemOut;
+            comboBoxTranslatorOutput.Text = itemIn;
+
+            var label = labelSelectLang.Content;
+            labelSelectLang.Content = labelSelectLangCountry.Content;
+            labelSelectLangCountry.Content = label;
+
+            if (txtBoxTranslatorOutput.Text != "Translated Text")
+            {
+                var text = txtBoxTranslatorInput.Text;
+                txtBoxTranslatorInput.Text = txtBoxTranslatorOutput.Text;
+                txtBoxTranslatorOutput.Text = text;
             }
         }
+
+        #endregion LANGUAGE TRANSLATOR
+
+        #region CURRENCY CONVERTER
 
         private async void ConvertAsync()
         {
@@ -341,40 +485,6 @@ namespace Countries
             txtBoxConverterInput.Text = string.Empty;
         }
 
-        private void btnSwitchLanguage_Click(object sender, RoutedEventArgs e)
-        {
-            List<string> LangList = new List<string>();
-
-            foreach (var lang in comboBoxTranslatorOutput.Items)
-            {
-                LangList.Add(lang.ToString());
-            }
-
-            var itemIn = (string)comboBoxTranslatorInput.SelectedItem;
-            var itemOut = (string)comboBoxTranslatorOutput.SelectedItem;
-
-            comboBoxTranslatorOutput.ItemsSource = null;
-            comboBoxTranslatorOutput.Items.Clear();
-
-            var source = comboBoxTranslatorInput.ItemsSource;
-            comboBoxTranslatorInput.ItemsSource = LangList;
-            comboBoxTranslatorOutput.ItemsSource = source;
-
-            comboBoxTranslatorInput.Text = itemOut;
-            comboBoxTranslatorOutput.Text = itemIn;
-
-            var label = labelSelectLang.Content;
-            labelSelectLang.Content = labelSelectLangCountry.Content;
-            labelSelectLangCountry.Content = label;
-
-            if (txtBoxTranslatorOutput.Text != "Translated Text")
-            {
-                var text = txtBoxTranslatorInput.Text;
-                txtBoxTranslatorInput.Text = txtBoxTranslatorOutput.Text;
-                txtBoxTranslatorOutput.Text = text;
-            }
-        }
-
         private void btnSwitchCurrency_Click(object sender, RoutedEventArgs e)
         {
             List<string> CurrencyList = new List<string>();
@@ -409,93 +519,33 @@ namespace Countries
             }
         }
 
-        private void listBoxCountries_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        #endregion CURRENCY CONVERTER
+
+        #region MUSIC PLAYER
+
+        private async Task GetAudioAsync(List<Country> countries)
         {
-            labelResult.Content = string.Empty;
-            comboBoxTranslatorInput.ItemsSource = null;
-            comboBoxTranslatorOutput.ItemsSource = null;
-            comboBoxTranslatorOutput.Items.Clear();
-            comboBoxConverterInput.ItemsSource = null;
-            comboBoxConverterOutput.ItemsSource = null;
-            comboBoxConverterOutput.Items.Clear();
-            if (txtBoxTranslatorInput.Text != "Insert the Text to Translate")
-                txtBoxTranslatorInput.Text = "Insert the Text to Translate";
-            if (txtBoxTranslatorOutput.Text != "Translated Text")
-                txtBoxTranslatorOutput.Text = "Translated Text";
-
-            Country country = (Country)listBoxCountries.SelectedItem;
-
-            if (country != null)
+            if (!Directory.Exists("Audio"))
             {
-                labelName.Content = country.Name;
-                labelCapital.Content = country.Capital;
-                labelRegion.Content = country.Region;
-                labelSubRegion.Content = country.SubRegion;
-                labelPopulation.Content = country.Population;
-                labelGini.Content = country.Gini;
+                Directory.CreateDirectory("Audio");
+            }
 
-                string flagNameAbrev = country.Flag.Split('/')[4];
-
-                string flagAbrev = flagNameAbrev.Split('.')[0];
-                BitmapImage img = new BitmapImage();
-                img.BeginInit();
-                if (File.Exists(Environment.CurrentDirectory + "/Flags" + $"/{flagAbrev}.jpg"))
+            foreach (var country in countries)
+            {
+                if (!File.Exists(Environment.CurrentDirectory + "/Audio" + $"/{country.Alpha2Code.ToLower()}.mp3"))
                 {
-                    img.UriSource = new Uri(Environment.CurrentDirectory + "/Flags" + $"/{flagAbrev}.jpg");
-                }
-                else
-                {
-                    img.UriSource = new Uri(Environment.CurrentDirectory + "/flagUnavailable.jpg");
-                    imageFlag1.Stretch = Stretch.None;
-                }
-                img.EndInit();
-                imageFlag1.Source = img;
-                imageFlag1.Stretch = Stretch.Fill;
-
-                List<string> LangDistinct = new List<string>();
-
-                if (country.Languages != null)
-                {
-                    foreach (var ct in Countries)
+                    try
                     {
-                        foreach (var lg in ct.Languages)
+                        using (var client = new WebClient())
                         {
-                            if (!LangDistinct.Contains(lg.ToString()))
-                                LangDistinct.Add(lg.ToString());
+                            await client.DownloadFileTaskAsync("http://www.nationalanthems.info/" + $"{country.Alpha2Code.ToLower()}.mp3", @"Audio\" + $"{country.Alpha2Code.ToLower()}.mp3");
                         }
                     }
-
-                }
-                comboBoxTranslatorInput.ItemsSource = LangDistinct;
-
-                if (country.Languages != null)
-                {
-                    foreach (var lg in country.Languages)
+                    catch
                     {
-                        comboBoxTranslatorOutput.Items.Add(lg.ToString());
+                        continue;
                     }
                 }
-
-                comboBoxConverterInput.ItemsSource = Rates;
-
-                foreach (var cr in country.Currencies)
-                {
-                    foreach (var rate in Rates)
-                    {
-                        if (cr.code != null)
-                        {
-                            if (cr.code.ToLower() == rate.Code.ToLower())
-                                comboBoxConverterOutput.Items.Add(rate);
-                        }
-                    }
-                }
-
-                if (comboBoxConverterOutput.Items.Count == 0)
-                    comboBoxConverterOutput.Text = "Unable to Convert";
-
-                textBoxGeography.Text = LoadGeography(country);
-
-                LoadAudio(country);
             }
         }
 
@@ -549,13 +599,18 @@ namespace Countries
 
         private void sliProgress_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            lblProgressStatus.Text = $"{TimeSpan.FromSeconds(sliProgress.Value).ToString(@"mm\:ss")} / {mediaPlayer.NaturalDuration.TimeSpan.ToString(@"mm\:ss")}";
+            if (mediaPlayer.Source != null)
+                lblProgressStatus.Text = $"{TimeSpan.FromSeconds(sliProgress.Value).ToString(@"mm\:ss")} / {mediaPlayer.NaturalDuration.TimeSpan.ToString(@"mm\:ss")}";
         }
 
         private void Grid_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             mediaPlayer.Volume += (e.Delta > 0) ? 0.1 : -0.1;
         }
+
+        #endregion MUSIC PLAYER
+
+        #region GEOGRAPHY TEXT
 
         private string LoadGeography(Country country)
         {
@@ -649,5 +704,7 @@ namespace Countries
             var stripped = reg.Replace(HTMLText, "");
             return decode ? HttpUtility.HtmlDecode(stripped) : stripped;
         }
+
+        #endregion GEOGRAPHY TEXT
     }
 }
