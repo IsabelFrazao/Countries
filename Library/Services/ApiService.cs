@@ -17,6 +17,14 @@ namespace Services
 {
     public class ApiService
     {
+        /// <summary>
+        /// Makes an API Call to Get the Countries' Information and insert it into a List. 
+        /// The call is made in the First Initialization and with every new Update Request.
+        /// </summary>
+        /// <param name="urlBase"></param>
+        /// <param name="controller"></param>
+        /// <param name="progress"></param>
+        /// <returns>Task</returns>
         public async Task<Response> GetCountries(string urlBase, string controller, IProgress<ProgressReport> progress)
         {
             ProgressReport report = new ProgressReport();
@@ -63,6 +71,13 @@ namespace Services
             }
         }
 
+        /// <summary>
+        /// Makes an API Call to Get the Inserted Text Translation and display it. 
+        /// The call is made with every new Inserted Text.
+        /// </summary>
+        /// <param name="urlBase"></param>
+        /// <param name="controller"></param>
+        /// <returns>Task</returns>
         public async Task<Response> GetTranslation(string urlBase, string controller)
         {
             try
@@ -108,6 +123,14 @@ namespace Services
             }
         }
 
+        /// <summary>
+        /// Makes an API Call to Get the Countries' Information and insert it into a List.
+        /// The call is made in the First Initialization and with every new Update Request.
+        /// </summary>
+        /// <param name="urlBase"></param>
+        /// <param name="controller"></param>
+        /// <param name="progress"></param>
+        /// <returns>Task</returns>
         public async Task<Response> GetRates(string urlBase, string controller, IProgress<ProgressReport> progress)
         {
             ProgressReport report = new ProgressReport();

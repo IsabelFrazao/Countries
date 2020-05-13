@@ -1,0 +1,13 @@
+﻿<Window x:Class="Countries.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Countries"
+        mc:Ignorable="d"
+        Title="About" Height="348.696" Width="666.706" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Icon="world_icon.png">
+    <Grid Margin="0,0,0,0.2">
+        <Image HorizontalAlignment="Left" Height="235" Margin="34,30,0,0" VerticalAlignment="Top" Width="233" Source="CINEL-logo2.JPG"/>
+        <Label x:Name="lblTexto" Content="" HorizontalAlignment="Left" VerticalAlignment="Top" FontWeight="Bold" FontSize="20" Margin="308,49,0,0"/>
+    </Grid>
+</Window>

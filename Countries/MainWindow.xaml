@@ -5,13 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Countries"
         mc:Ignorable="d"
-        Title="Países" Height="690" Width="1400" WindowStartupLocation="CenterScreen" WindowState="Normal">
+        Title="Countries" Height="690" Width="1404.8" WindowStartupLocation="CenterScreen" WindowState="Normal" ResizeMode="NoResize" Icon="world_icon.png" Closing="Window_Closing">
     <Grid Margin="0,16,-0.4,-16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
         <Border BorderThickness="1" BorderBrush="LightGray" HorizontalAlignment="Left" Height="103" Margin="651,90,0,0" VerticalAlignment="Top" Width="145">
             <Image x:Name="imageFlag1" Stretch="Fill" RenderTransformOrigin="1.095,0.39" />
         </Border>
         <Image HorizontalAlignment="Left" Height="31" VerticalAlignment="Top" Width="822" Source="img_paises.jpg" Stretch="Fill" Margin="-11,0,0,0"/>
-        <Image Height="34" VerticalAlignment="Top" Source="img_paises2.jpg" Stretch="UniformToFill" Margin="802,0,0,0"/>
+        <Image Height="34" VerticalAlignment="Top" Source="img_paises2.jpg" Stretch="UniformToFill" Margin="801,0,0.6,0"/>
         <Label Content="Name:" HorizontalAlignment="Left" Margin="279,93,0,0" VerticalAlignment="Top" FontWeight="Bold" RenderTransformOrigin="0.651,0.648" Height="26" Width="46"/>
         <Label Content="Capital:" HorizontalAlignment="Left" Margin="279,128,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="26" Width="53"/>
         <Label Content="Region:" HorizontalAlignment="Left" Margin="279,167,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="26" Width="53"/>
@@ -23,8 +27,7 @@
         <Label x:Name="labelRegion" Content="" HorizontalAlignment="Left" Margin="375,167,0,0" VerticalAlignment="Top" Width="257" Height="26"/>
         <Label x:Name="labelSubRegion" Content="" HorizontalAlignment="Left" Margin="375,213,0,0" VerticalAlignment="Top" Width="257" Height="26"/>
         <Label x:Name="labelPopulation" Content="" HorizontalAlignment="Left" Margin="375,254,0,0" VerticalAlignment="Top" Width="257" Height="26"/>
-        <Label x:Name="labelGini" Content="" HorizontalAlignment="Left" Margin="375,304,0,0" VerticalAlignment="Top" Width="257" Height="26"/>
-        <Label x:Name="labelResult" Content="" HorizontalAlignment="Left" Margin="46,62,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="26" Width="10"/>
+        <Label x:Name="labelGini" Content="" HorizontalAlignment="Left" Margin="375,304,0,0" VerticalAlignment="Top" Width="257" Height="26"/>        
         <Button x:Name="labelTranslator" Content="Language Translator" FontWeight="Bold" HorizontalAlignment="Left" Margin="852,93,0,0" VerticalAlignment="Top" Width="458" Height="22"/>
         <Button x:Name="labelConverter" Content="Currency Converter" FontWeight="Bold" HorizontalAlignment="Left" Margin="852,396,0,0" VerticalAlignment="Top" Width="458" Height="22"/>
         <TextBox x:Name="txtBoxTranslatorInput" HorizontalAlignment="Left" Height="113" Margin="852,183,0,0" TextWrapping="Wrap" Text="Insert the Text to Translate" VerticalAlignment="Top" Width="223" GotFocus="txtBoxTranslatorInput_GotFocus"/>
@@ -52,7 +55,7 @@
             <Image Source="images.png" Height="25" Width="37" />
         </Button>
         <ProgressBar x:Name="ProgressBarCountries" HorizontalAlignment="Left" Height="39" Margin="0,621,0,0" VerticalAlignment="Top" Width="1394"/>
-        <TextBox x:Name="textBoxGeography" HorizontalAlignment="Left" Height="203" Margin="279,396,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="517" BorderThickness="0"/>
+        <TextBox x:Name="textBoxGeography" HorizontalAlignment="Left" Height="164" Margin="279,396,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="517" BorderThickness="0"/>
         <Border BorderThickness="1" BorderBrush="LightGray" HorizontalAlignment="Left" Height="158" Margin="651,213,0,0" VerticalAlignment="Top" Width="145">
         <Image x:Name="imageMap" Stretch="Fill" RenderTransformOrigin="1.095,0.39"/>
         </Border>
@@ -89,5 +92,8 @@
                 <ProgressBar x:Name="pbVolume" Width="30" Height="12" Maximum="1" Value="{Binding ElementName=mediaPlayer, Path=Volume}" />
             </StatusBarItem>
         </StatusBar>
+        <Label x:Name="lbl_Status" HorizontalAlignment="Left" Margin="74,49,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+        <Button x:Name="btnUpdate" Content="Update Info" FontWeight="Bold" HorizontalAlignment="Left" Margin="279,577,0,0" VerticalAlignment="Top" Width="223" Height="22" Click="btnUpdate_Click"/>
+        <Button x:Name="btnAbout" Content="About" FontWeight="Bold" HorizontalAlignment="Left" Margin="573,577,0,0" VerticalAlignment="Top" Width="223" Height="22" Click="btnAbout_Click"/>
     </Grid>
 </Window>

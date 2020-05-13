@@ -17,7 +17,7 @@ using System.Windows.Documents;
 
 namespace Services
 {
-    public class DataService //Criar uma Base de Dados a partir dos dados da Api
+    public class DataService
     {
         private SQLiteConnection connection;
 
@@ -25,6 +25,10 @@ namespace Services
 
         private DialogService dialogService;
 
+        /// <summary>
+        /// This class is used when Information needs to be Saved or Loaded from the Database.
+        /// It's used in the First Initialization, Update Request or Program working Offline.
+        /// </summary>
         public DataService() //Creating the DataBase and the Table on the Database
         {
             dialogService = new DialogService();
@@ -95,9 +99,16 @@ namespace Services
             }
         }
 
+        /// <summary>
+        /// Calls specific methods to save information into Database
+        /// </summary>
+        /// <param name="countries"></param>
+        /// <param name="rates"></param>
+        /// <param name="progress"></param>
+        /// <returns>Task</returns>
         public async Task SaveData(List<Country> countries, List<Rate> rates, IProgress<ProgressReport> progress)
         {
-            ProgressReport report = new ProgressReport();
+            ProgressReport report = new ProgressReport();            
 
             List<string> ListCurrencyDist = new List<string>();
 
@@ -131,6 +142,11 @@ namespace Services
             }
         }
 
+        /// <summary>
+        /// Saves Country's General Information to the Database
+        /// </summary>
+        /// <param name="country"></param>
+        /// <returns>Task</returns>
         private async Task SaveDataCountryAsync(Country country)
         {
             try
@@ -148,12 +164,17 @@ namespace Services
 
                 await Task.Run(() => command.ExecuteNonQuery());
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
             }
         }
 
+        /// <summary>
+        /// Saves Currency's General Information to the Database
+        /// </summary>
+        /// <param name="currency"></param>
+        /// <returns>Task</returns>
         private async Task SaveDataCurrencyAsync(Currency currency)
         {
             try
@@ -168,12 +189,18 @@ namespace Services
 
                 await Task.Run(() => command.ExecuteNonQuery());
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
             }
         }
 
+        /// <summary>
+        /// Intersects and saves Country and Currency's Information matching the Country's Alpha3Code to the Database
+        /// </summary>
+        /// <param name="country"></param>
+        /// <param name="currency"></param>
+        /// <returns>Task</returns>
         private async Task SaveDataCountryCurrencyAsync(Country country, Currency currency)
         {
             try
@@ -183,12 +210,18 @@ namespace Services
 
                 await Task.Run(() => command.ExecuteNonQuery());
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
             }
         }
 
+        /// <summary>
+        /// Saves Rates' General Information to the Database
+        /// </summary>
+        /// <param name="rates"></param>
+        /// <param name="progress"></param>
+        /// <returns>Task</returns>
         private async Task SaveDataRatesAsync(List<Rate> rates, IProgress<ProgressReport> progress)
         {
             ProgressReport report = new ProgressReport();
@@ -207,12 +240,17 @@ namespace Services
                     progress.Report(report);
                 }
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
             }
         }
 
+        /// <summary>
+        /// Loads Country's General Information from Database
+        /// </summary>
+        /// <param name="progress"></param>
+        /// <returns>List</returns>
         public List<Country> GetCountryDataAsync(IProgress<ProgressReport> progress)
         {
             List<Country> Countries = new List<Country>();
@@ -255,13 +293,18 @@ namespace Services
 
                 return Countries;
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
                 return null;
             }
         }
 
+        /// <summary>
+        /// Loads Currency's General Information from Database
+        /// </summary>
+        /// <param name="alpha3code"></param>
+        /// <returns>List</returns>
         public List<Currency> GetCurrencyData(string alpha3code)
         {
             List<Currency> Currencies = new List<Currency>();
@@ -287,13 +330,17 @@ namespace Services
 
                 return Currencies;
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
                 return null;
             }
         }
 
+        /// <summary>
+        /// Loads Rates' General Information from Database
+        /// </summary>
+        /// <returns>List</returns>
         public List<Rate> GetRatesData()
         {
             List<Rate> Rates = new List<Rate>();
@@ -319,13 +366,17 @@ namespace Services
 
                 return Rates;
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
                 return null;
             }
         }
 
+        /// <summary>
+        /// Deletes the Table in the Database and all its content
+        /// </summary>
+        /// <returns></returns>
         public async Task DeleteDataAsync()
         {
             try
@@ -346,7 +397,7 @@ namespace Services
                 command = new SQLiteCommand(sql, connection);
                 await command.ExecuteNonQueryAsync();
             }
-            catch (SqlException ex)
+            catch (Exception ex)
             {
                 dialogService.ShowMessage("Error", ex.Message);
             }
