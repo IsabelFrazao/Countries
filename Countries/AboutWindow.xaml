@@ -7,7 +7,8 @@
         mc:Ignorable="d"
         Title="About" Height="348.696" Width="666.706" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Icon="world_icon.png">
     <Grid Margin="0,0,0,0.2">
-        <Image HorizontalAlignment="Left" Height="235" Margin="34,30,0,0" VerticalAlignment="Top" Width="233" Source="CINEL-logo2.JPG"/>
-        <Label x:Name="lblTexto" Content="" HorizontalAlignment="Left" VerticalAlignment="Top" FontWeight="Bold" FontSize="20" Margin="308,49,0,0"/>
+        <Image HorizontalAlignment="Left" Height="235" Margin="30,50,0,0" VerticalAlignment="Top" Width="233" Source="CINEL-logo2.JPG"/>
+        <Label x:Name="lblTexto" Content="" HorizontalAlignment="Left" VerticalAlignment="Top" FontWeight="Bold" FontSize="20" Margin="343,61,0,0"/>
+        <Image Height="31" VerticalAlignment="Top" Source="img_paises2.jpg" Stretch="UniformToFill" Margin="10,0,0,0"/>
     </Grid>
 </Window>

@@ -55,7 +55,7 @@
             <Image Source="images.png" Height="25" Width="37" />
         </Button>
         <ProgressBar x:Name="ProgressBarCountries" HorizontalAlignment="Left" Height="39" Margin="0,621,0,0" VerticalAlignment="Top" Width="1394"/>
-        <TextBox x:Name="textBoxGeography" HorizontalAlignment="Left" Height="164" Margin="279,396,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="517" BorderThickness="0"/>
+        <TextBox x:Name="textBoxWiki" HorizontalAlignment="Left" Height="164" Margin="279,396,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="517" BorderThickness="0" IsReadOnly="True"/>
         <Border BorderThickness="1" BorderBrush="LightGray" HorizontalAlignment="Left" Height="158" Margin="651,213,0,0" VerticalAlignment="Top" Width="145">
         <Image x:Name="imageMap" Stretch="Fill" RenderTransformOrigin="1.095,0.39"/>
         </Border>

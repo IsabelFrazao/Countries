@@ -1,14 +1,18 @@
 ﻿using Library;
 using Library.Models;
 using ServiceStack;
+using Svg;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Data.SQLite;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -29,7 +33,7 @@ namespace Services
         /// This class is used when Information needs to be Saved or Loaded from the Database.
         /// It's used in the First Initialization, Update Request or Program working Offline.
         /// </summary>
-        public DataService() //Creating the DataBase and the Table on the Database
+        public DataService() //Creating the DataBase and the Tables on the Database 
         {
             dialogService = new DialogService();
 
@@ -99,8 +103,10 @@ namespace Services
             }
         }
 
+        #region SAVE
+
         /// <summary>
-        /// Calls specific methods to save information into Database
+        /// Calls specific methods to save information into Database asynchronously.
         /// </summary>
         /// <param name="countries"></param>
         /// <param name="rates"></param>
@@ -108,12 +114,14 @@ namespace Services
         /// <returns>Task</returns>
         public async Task SaveData(List<Country> countries, List<Rate> rates, IProgress<ProgressReport> progress)
         {
-            ProgressReport report = new ProgressReport();            
+            ProgressReport report = new ProgressReport();
 
             List<string> ListCurrencyDist = new List<string>();
 
             try
             {
+                await SaveDataRatesAsync(rates, progress);
+
                 foreach (var country in countries)
                 {
                     await SaveDataCountryAsync(country);
@@ -133,8 +141,6 @@ namespace Services
                     report.PercentageComplete = (report.SaveCountries.Count * 100) / countries.Count;
                     progress.Report(report);
                 }
-
-                await SaveDataRatesAsync(rates, progress);
             }
             catch (Exception ex)
             {
@@ -143,7 +149,7 @@ namespace Services
         }
 
         /// <summary>
-        /// Saves Country's General Information to the Database
+        /// Saves Country's General Information to the Database asynchronously.
         /// </summary>
         /// <param name="country"></param>
         /// <returns>Task</returns>
@@ -171,7 +177,7 @@ namespace Services
         }
 
         /// <summary>
-        /// Saves Currency's General Information to the Database
+        /// Saves Currency's General Information to the Database asynchronously.
         /// </summary>
         /// <param name="currency"></param>
         /// <returns>Task</returns>
@@ -196,7 +202,7 @@ namespace Services
         }
 
         /// <summary>
-        /// Intersects and saves Country and Currency's Information matching the Country's Alpha3Code to the Database
+        /// Intersects and saves Country and Currency's Information matching the Country's Alpha3Code to the Database asynchronously.
         /// </summary>
         /// <param name="country"></param>
         /// <param name="currency"></param>
@@ -217,7 +223,7 @@ namespace Services
         }
 
         /// <summary>
-        /// Saves Rates' General Information to the Database
+        /// Saves Rates' General Information to the Database asynchronously.
         /// </summary>
         /// <param name="rates"></param>
         /// <param name="progress"></param>
@@ -247,11 +253,286 @@ namespace Services
         }
 
         /// <summary>
-        /// Loads Country's General Information from Database
+        /// Saves the block of Text using the Wikipedia API in XML format as Text File for each Country asynchronously.
+        /// After saving the file, reads it and validates its content.
+        /// If not validated, copies from Backup to the main folder.
+        /// </summary>
+        /// <param name="alpha2Code"></param>
+        /// <param name="output"></param>
+        /// <returns>Task</returns>
+        public async Task SaveWikiTextAsync(string alpha2Code, string output)
+        {
+            var fileName = Environment.CurrentDirectory + "/WikiText" + $"/{alpha2Code}.txt";
+            var pathBackup = Environment.CurrentDirectory + "/WikiTextBackup" + $"/{alpha2Code}.txt";
+
+            if (!File.Exists(fileName))
+            {
+                try
+                {
+                    FileInfo textFile = new FileInfo(fileName);
+                    string Text = string.Empty;
+
+                    if (!Directory.Exists("WikiText"))
+                    {
+                        Directory.CreateDirectory("WikiText");
+                    }
+
+                    StreamWriter sw = new StreamWriter(fileName, false);
+
+                    if (!File.Exists(fileName))
+                    {
+                        sw = File.CreateText(fileName);
+                    }
+
+                    await Task.Run(() => sw.WriteLine(output));
+
+                    sw.Close();
+
+                    StreamReader sr;
+
+                    if (File.Exists(fileName))
+                    {
+                        sr = File.OpenText(fileName);
+
+                        string line = string.Empty;
+
+                        while ((line = sr.ReadLine()) != null)
+                        {
+                            if (alpha2Code == "cg" || alpha2Code == "ge")
+                                Text = string.Empty;
+                            else
+                            {
+                                if (!string.IsNullOrEmpty(line))
+                                    Text = line;
+                            }
+                        }
+
+                        if (string.IsNullOrEmpty(Text))
+                        {
+                            if (File.Exists(pathBackup))
+                            {
+                                sr.Close();
+                                textFile = new FileInfo(pathBackup);
+                                File.Delete(fileName);
+                                textFile.CopyTo(fileName);
+                                sr = File.OpenText(fileName);
+                            }
+                        }
+                        sr.Close();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the Flag Images using from an URL for each Country asynchronously.
+        /// </summary>
+        /// <param name="countries"></param>
+        /// <param name="progress"></param>
+        /// <returns>Task</returns>
+        public async Task GetFlagsAsync(List<Country> countries, IProgress<ProgressReport> progress)
+        {
+            ProgressReport report = new ProgressReport();
+
+            if (!Directory.Exists("Flags"))
+            {
+                Directory.CreateDirectory("Flags");
+            }
+
+            foreach (var ct in countries)
+            {
+                var fileNameSVG = Environment.CurrentDirectory + "/Flags" + $"/{ct.Alpha3Code.ToLower()}.svg";//Path to save the image as SVG
+                var fileNameJPG = Environment.CurrentDirectory + "/Flags" + $"/{ct.Alpha3Code.ToLower()}.jpg";
+                var pathBackup = Environment.CurrentDirectory + "/FlagsBackup" + $"/{ct.Alpha3Code.ToLower()}.jpg";
+                FileInfo imageFile = new FileInfo(fileNameSVG);
+
+                if (!File.Exists(fileNameJPG))
+                {
+                    try
+                    {
+                        //Save the image as SVG from the URL
+                        string svgFileName = "https://restcountries.eu" + $"/data/{ct.Alpha3Code.ToLower()}.svg";
+
+                        if (ct.Alpha3Code.ToLower() != "bra")
+                        {
+                            using (WebClient webClient = new WebClient())
+                            {
+                                await webClient.DownloadFileTaskAsync(svgFileName, fileNameSVG);
+                            }
+                        }
+                        else
+                        {
+                            imageFile = new FileInfo(pathBackup);
+
+                            File.Delete(fileNameSVG);
+
+                            imageFile.CopyTo(fileNameJPG);
+                        }
+
+                        //Read SVG Document from file system
+                        var svgDocument = SvgDocument.Open(fileNameSVG);
+
+                        try
+                        {
+                            var bitmap = svgDocument.Draw(100, 100); //If the Bitmap it's unable to be created, it will go to catch
+
+                            bitmap.Save(fileNameJPG, ImageFormat.Jpeg);
+
+                            File.Delete(fileNameSVG);
+                        }
+                        catch
+                        {
+                            if (File.Exists(pathBackup))
+                            {
+                                imageFile = new FileInfo(pathBackup);
+                                File.Delete(fileNameSVG);
+                                imageFile.CopyTo(fileNameJPG);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        if (File.Exists(pathBackup))
+                        {
+                            imageFile = new FileInfo(pathBackup);
+                            File.Delete(fileNameSVG);
+                            imageFile.CopyTo(fileNameJPG);
+                        }
+                        continue;
+                    }
+                }
+                report.SaveCountries.Add(ct);
+                report.PercentageComplete = (report.SaveCountries.Count * 100) / countries.Count;
+                progress.Report(report);
+            }
+        }
+
+        /// <summary>
+        /// Gets the Maps Images from an URL for each Country asynchronously.
+        /// </summary>
+        /// <param name="countries"></param>
+        /// <param name="progress"></param>
+        /// <returns>Task</returns>
+        public async Task GetMapsAsync(List<Country> countries, IProgress<ProgressReport> progress)
+        {
+            ProgressReport report = new ProgressReport();
+
+            if (!Directory.Exists("Maps"))
+            {
+                Directory.CreateDirectory("Maps");
+            }
+
+            foreach (var ct in countries)
+            {
+                var fileName = Environment.CurrentDirectory + "/Maps" + $"/{ct.Alpha2Code.ToLower()}.gif";
+                var pathBackup = Environment.CurrentDirectory + "/MapsBackup" + $"/{ct.Alpha2Code.ToLower()}.gif";
+                FileInfo imageFile = new FileInfo(fileName);
+
+                if (!File.Exists(fileName))
+                {
+                    try
+                    {
+                        using (WebClient webClient = new WebClient())
+                        {
+                            //await webClient.DownloadFileTaskAsync("https://github.com/djaiss/mapsicon/tree/master/all/" + $"{ct.Alpha2Code.ToLower()}/128.png", @"Maps2\" + $"{ct.Alpha2Code.ToLower()}.png");
+
+                            //https://github.com/djaiss/mapsicon/tree/master/all/pt/128.png
+                            await webClient.DownloadFileTaskAsync("https://www.worldmap1.com/map/" + $"{ct.Name.Replace((' '), ('-')).ToLower()}/" + $"where_is_{ct.Name.Replace((' '), ('_')).ToLower()}_in_the_world.gif", @"Maps\" + $"{ct.Alpha2Code.ToLower()}.gif");
+                        }
+
+                        try
+                        {
+                            Bitmap img = new Bitmap(fileName); //If the Bitmap it's unable to be created, it will go to catch
+                        }
+                        catch
+                        {
+                            if (File.Exists(pathBackup))
+                            {
+                                imageFile = new FileInfo(pathBackup);
+                                File.Delete(fileName);
+                                imageFile.CopyTo(fileName);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        if (File.Exists(pathBackup))
+                        {
+                            imageFile = new FileInfo(pathBackup);
+                            File.Delete(fileName);
+                            imageFile.CopyTo(fileName);
+                        }
+                        continue;
+                    }
+                }
+                report.SaveCountries.Add(ct);
+                report.PercentageComplete = (report.SaveCountries.Count * 100) / countries.Count;
+                progress.Report(report);
+            }
+        }
+
+        /// <summary>
+        /// Gets the Audio from an URL for each Country asynchronously.
+        /// </summary>
+        /// <param name="countries"></param>
+        /// <param name="progress"></param>
+        /// <returns></returns>
+        public async Task GetAudioAsync(List<Country> countries, IProgress<ProgressReport> progress)
+        {
+            ProgressReport report = new ProgressReport();
+
+            if (!Directory.Exists("Audio"))
+            {
+                Directory.CreateDirectory("Audio");
+            }
+
+            foreach (var country in countries)
+            {
+                var fileName = Environment.CurrentDirectory + "/Audio" + $"/{country.Alpha2Code.ToLower()}.mp3";
+                var pathBackup = Environment.CurrentDirectory + "/AudioBackup" + $"/{country.Alpha2Code.ToLower()}.mp3";
+
+                if (!File.Exists(fileName))
+                {
+                    FileInfo fileLength = new FileInfo(fileName);
+
+                    try
+                    {
+                        using (var client = new WebClient())
+                        {
+                            await client.DownloadFileTaskAsync("http://www.nationalanthems.info/" + $"{country.Alpha2Code.ToLower()}.mp3", fileName);
+                        }
+                    }
+                    catch
+                    {
+                        if (File.Exists(pathBackup))
+                        {
+                            File.Delete(fileName);
+                            fileLength = new FileInfo(pathBackup);
+                            fileLength.CopyTo(fileName);
+                        }
+                        continue;
+                    }
+                }
+                report.SaveCountries.Add(country);
+                report.PercentageComplete = (report.SaveCountries.Count * 100) / countries.Count;
+                progress.Report(report);
+            }
+        }
+
+        #endregion SAVE
+
+        #region LOAD
+
+        /// <summary>
+        /// Loads Country's General Information from Database asynchronously.
         /// </summary>
         /// <param name="progress"></param>
         /// <returns>List</returns>
-        public List<Country> GetCountryDataAsync(IProgress<ProgressReport> progress)
+        public async Task<List<Country>> LoadCountryDataAsync(IProgress<ProgressReport> progress)
         {
             List<Country> Countries = new List<Country>();
             ProgressReport report = new ProgressReport();
@@ -263,9 +544,9 @@ namespace Services
                 command = new SQLiteCommand(sql, connection);
                 SQLiteDataReader reader = command.ExecuteReader();
 
-                while (reader.Read())
+                while (await Task.Run(() => reader.Read()))
                 {
-                    Countries.Add(new Country
+                    await Task.Run(() => Countries.Add(new Country
                     {
                         Alpha3Code = (string)reader["Alpha3Code"],
                         Alpha2Code = (string)reader["Alpha2Code"],
@@ -275,15 +556,15 @@ namespace Services
                         SubRegion = (string)reader["SubRegion"],
                         Population = (int)reader["Population"],
                         Gini = (double?)reader["Gini"],
-                    });
+                    }));
                 }
 
                 foreach (var country in Countries)
                 {
-                    country.Currencies = (GetCurrencyData(country.Alpha3Code));
+                    country.Currencies = (await LoadCurrencyData(country.Alpha3Code));
                 }
 
-                GetRatesData();
+                await LoadRatesData();
 
                 report.SaveCountries = Countries;
                 report.PercentageComplete = (report.SaveCountries.Count * 100) / Countries.Count;
@@ -301,11 +582,11 @@ namespace Services
         }
 
         /// <summary>
-        /// Loads Currency's General Information from Database
+        /// Loads Currency's General Information from Database asynchronously.
         /// </summary>
         /// <param name="alpha3code"></param>
         /// <returns>List</returns>
-        public List<Currency> GetCurrencyData(string alpha3code)
+        public async Task<List<Currency>> LoadCurrencyData(string alpha3code)
         {
             List<Currency> Currencies = new List<Currency>();
 
@@ -318,14 +599,14 @@ namespace Services
                 command = new SQLiteCommand(sql, connection);
                 SQLiteDataReader reader = command.ExecuteReader();
 
-                while (reader.Read())
+                while (await Task.Run(() => reader.Read()))
                 {
-                    Currencies.Add(new Currency
+                    await Task.Run(() => Currencies.Add(new Currency
                     {
                         code = (string)reader["code"],
                         name = (string)reader["name"],
                         symbol = (string)reader["symbol"]
-                    });
+                    }));
                 }
 
                 return Currencies;
@@ -338,10 +619,10 @@ namespace Services
         }
 
         /// <summary>
-        /// Loads Rates' General Information from Database
+        /// Loads Rates' General Information from Database asynchronously.
         /// </summary>
         /// <returns>List</returns>
-        public List<Rate> GetRatesData()
+        public async Task<List<Rate>> LoadRatesData()
         {
             List<Rate> Rates = new List<Rate>();
 
@@ -353,15 +634,15 @@ namespace Services
 
                 SQLiteDataReader reader = command.ExecuteReader();
 
-                while (reader.Read())
+                while (await Task.Run(() => reader.Read()))
                 {
-                    Rates.Add(new Rate
+                    await Task.Run(() => Rates.Add(new Rate
                     {
                         RateId = (int)reader["RateId"],
                         Code = (string)reader["Code"],
                         TaxRate = Convert.ToDouble((double)reader["TaxRate"]),
                         Name = (string)reader["Name"]
-                    });
+                    }));
                 }
 
                 return Rates;
@@ -374,7 +655,47 @@ namespace Services
         }
 
         /// <summary>
-        /// Deletes the Table in the Database and all its content
+        /// Loads the text file so it can be displayed.
+        /// </summary>
+        /// <param name="alpha2Code"></param>
+        /// <returns></returns>
+        public string LoadWikiText(string alpha2Code)
+        {
+            try
+            {
+                string file = @"WikiText\" + $"{alpha2Code}.txt";
+
+                string Text = string.Empty;
+
+                StreamReader sr;
+
+                if (File.Exists(file))
+                {
+                    sr = File.OpenText(file);
+
+                    string line = string.Empty;
+
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        if (!string.IsNullOrEmpty(line))
+                            Text = line;
+                    }
+
+                    sr.Close();
+                }
+                return Text;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return null;
+            }
+        }
+
+        #endregion LOAD
+
+        /// <summary>
+        /// Deletes the Table in the Database and all its content asynchronously.
         /// </summary>
         /// <returns></returns>
         public async Task DeleteDataAsync()

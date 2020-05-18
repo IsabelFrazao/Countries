@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Services
@@ -33,12 +34,12 @@ namespace Services
             {
                 var client = new HttpClient
                 {
-                    BaseAddress = new Uri(urlBase)//Onde está o endereço base da API
-                }; //Criar um Http para fazer a ligação externa via http
+                    BaseAddress = new Uri(urlBase)
+                };
 
-                var response = await client.GetAsync(controller);//Onde está o Controlador da API
+                var response = await client.GetAsync(controller);
 
-                var result = await response.Content.ReadAsStringAsync();//Carregar os resultados em forma de string para dentro do result
+                var result = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -103,7 +104,6 @@ namespace Services
                         Message = result
                     };
                 }
-                //result = {"outputs":[{"output":"good bye","stats":{"elapsed_time":19,"nb_characters":5,"nb_tokens":1,"nb_tus":1,"nb_tus_failed":0}}]}
 
                 var output = result.Split('"')[5];
 
@@ -165,6 +165,67 @@ namespace Services
                 {
                     IsSuccess = true,
                     Result = rates
+                };
+            }
+            catch (Exception ex)
+            {
+                return new Response
+                {
+                    IsSuccess = false,
+                    Message = ex.Message
+                };
+            }
+        }
+
+        /// <summary>
+        /// Makes an API Call to Get the Countries' Information Text. 
+        /// The call is made in the First Initialization and with every new Update Request.
+        /// </summary>
+        /// <param name="urlBase"></param>
+        /// <param name="controller"></param>
+        /// <param name="countryName"></param>
+        /// <returns>Task</returns>
+        public async Task<Response> GetWikiText(string urlBase, string controller, string alpha2Code)
+        {
+            try
+            {
+                var client = new HttpClient
+                {
+                    BaseAddress = new Uri(urlBase)
+                };
+
+                var response = await client.GetAsync(controller);
+
+                var result = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new Response
+                    {
+                        IsSuccess = false,
+                        Message = result
+                    };
+                }
+
+                string[] parts = result.Split(new string[] { "&lt;/p&gt;" }, StringSplitOptions.None); //Split the string by paragraphs (closing paragraph tag)
+
+                var output = string.Empty;
+
+                if (parts[1].Contains(alpha2Code))
+                    output = parts[1];
+                else
+                    output = parts[2];
+
+                //Remove the tags from the XML
+                output = Regex.Replace(output, @"&lt;[^&gt;]+&gt;", string.Empty); //Remove Tags
+                output = Regex.Replace(output, @"(&lt;[\s\S]+?&gt;)", string.Empty); //Remove remaining Tags / Tags' remains
+
+                output = output.Replace("listen", string.Empty);
+
+                return new Response
+                {
+                    IsSuccess = true,
+                    Result = output
                 };
             }
             catch (Exception ex)

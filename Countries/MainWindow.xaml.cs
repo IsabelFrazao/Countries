@@ -18,12 +18,14 @@ using System.Web;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
+using MessageBox = System.Windows.MessageBox;
 
 namespace Countries
 {
@@ -43,7 +45,6 @@ namespace Countries
         private List<Rate> Rates = new List<Rate>();
         private MediaPlayer mediaPlayer = new MediaPlayer();
         private bool userIsDraggingSlider = false;
-        private bool SavingInDatabase = false;
         #endregion
 
         public MainWindow()
@@ -51,19 +52,19 @@ namespace Countries
             InitializeComponent();
 
             networkService = new NetworkService();
-
             apiService = new ApiService();
-
             dialogService = new DialogService();
-
             dataService = new DataService();
 
-            LoadCountriesAsync();
-
-            ConvertAsync();
+            LoadInfoAsync();
         }
 
-        private async void LoadCountriesAsync()//Tests the Internet Connection
+        /// <summary>
+        /// Tests the Internet Connection.
+        /// If successful loads the information from the Web.
+        /// If failed, loads the information from the saved Database.
+        /// </summary>
+        private async void LoadInfoAsync()
         {
             Progress<ProgressReport> progress = new Progress<ProgressReport>();
             progress.ProgressChanged += ReportProgress;
@@ -74,34 +75,31 @@ namespace Countries
 
             if (!connection.IsSuccess)
             {
-                SavingInDatabase = false;
-
                 lbl_Status.Content = "Loading...";
-                LoadLocalCountries();
+                btnUpdate.IsEnabled = false;
+                await LoadLocalCountriesAsync();
                 load = false;
                 lbl_Status.Content = "Loading Complete";
+                btnUpdate.IsEnabled = true;
             }
             else
             {
-                SavingInDatabase = false;
-
                 lbl_Status.Content = "Loading...";
+                btnUpdate.IsEnabled = false;
                 await LoadApiCountriesAsync();
-                await GetFlagsAsync(Countries, progress);
-                await GetMapsAsync(Countries, progress);
-                await GetAudioAsync(Countries, progress);
-                //if (!Directory.Exists("Geography"))
-                // await GetGeographyTextAsync(Countries);
+                await LoadApiRatesAsync();
+                await LoadApiWikiTextAsync(Countries, progress);
+                await dataService.GetFlagsAsync(Countries, progress);
+                await dataService.GetMapsAsync(Countries, progress);
+                await dataService.GetAudioAsync(Countries, progress);
                 load = true;
                 lbl_Status.Content = "Loading Complete";
+                btnUpdate.IsEnabled = true;
             }
 
             if (Countries.Count == 0)
             {
-                SavingInDatabase = false;
-
                 lbl_Status.Content = "There is no Connection to the Internet" + Environment.NewLine + "Try again later!";
-
                 lbl_Status.Content = "First initialization must have Internet Connection!";
 
                 return;
@@ -111,29 +109,37 @@ namespace Countries
 
             if (load)
             {
-                SavingInDatabase = true;
-
-                //await dataService.DeleteDataAsync();
                 lbl_Status.Content = "Saving...";
-
+                btnUpdate.IsEnabled = false;
                 await dataService.SaveData(Countries, Rates, progress);
-
                 lbl_Status.Content = "Saving Complete";
-
-                lbl_Status.Content = "Loaded Successfully" + Environment.NewLine + "          Online";  
+                lbl_Status.Content = "Loaded Successfully" + Environment.NewLine + "          Online";
+                btnUpdate.IsEnabled = true;
             }
             else
             {
-                SavingInDatabase = false;
-
                 lbl_Status.Content = "Loaded Successfully" + Environment.NewLine + "        Offline";
             }
         }
 
+        /// <summary>
+        /// Event to display the progress report status in the Progress Bar
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ReportProgress(object sender, ProgressReport e)
+        {
+            ProgressBarCountries.Value = e.PercentageComplete;
+        }
+
+        #region COUNTRIES
+
+        /// <summary>
+        /// Redirects to the ApiService Class to make the API Call to the Countries Rest API asynchronously.
+        /// </summary>
+        /// <returns>Task</returns>
         private async Task LoadApiCountriesAsync()
         {
-            SavingInDatabase = false;
-
             Progress<ProgressReport> progress = new Progress<ProgressReport>();
             progress.ProgressChanged += ReportProgress;
 
@@ -142,309 +148,62 @@ namespace Countries
             Countries = (List<Country>)response.Result;
         }
 
-        private async Task GetFlagsAsync(List<Country> countries, IProgress<ProgressReport> progress)
+        /// <summary>
+        /// Accesses the DataService Class to load the information if the Software is loaded Offline
+        /// </summary>
+        private async Task LoadLocalCountriesAsync()
         {
-            SavingInDatabase = false;
+            Progress<ProgressReport> progress = new Progress<ProgressReport>();
+            progress.ProgressChanged += ReportProgress;
 
-            ProgressReport report = new ProgressReport();
-
-            if (!Directory.Exists("Flags"))
-            {
-                Directory.CreateDirectory("Flags");
-            }
-
-            foreach (var ct in countries)
-            {
-                var fileNameSVG = Environment.CurrentDirectory + "/Flags" + $"/{ct.Alpha3Code.ToLower()}.svg";//Path to save the image as SVG
-                var fileNameJPG = Environment.CurrentDirectory + "/Flags" + $"/{ct.Alpha3Code.ToLower()}.jpg";
-                var pathBackup = Environment.CurrentDirectory + "/FlagsBackup" + $"/{ct.Alpha3Code.ToLower()}.jpg";
-                FileInfo imageFile = new FileInfo(fileNameSVG);
-
-                if (!File.Exists(fileNameJPG))
-                {
-                    try
-                    {       
-                        //Save the image as SVG from the URL
-                        string svgFileName = "https://restcountries.eu" + $"/data/{ct.Alpha3Code.ToLower()}.svg";
-
-                        if(ct.Alpha3Code.ToLower() != "bra")
-                        {
-                            using (WebClient webClient = new WebClient())
-                            {
-                                await webClient.DownloadFileTaskAsync(svgFileName, fileNameSVG);
-                            }
-                        }
-                        else
-                        {
-                            imageFile = new FileInfo(pathBackup);
-
-                            File.Delete(fileNameSVG);
-
-                            imageFile.CopyTo(fileNameJPG);
-                        }
-                        
-                        //Read SVG Document from file system
-                        var svgDocument = SvgDocument.Open(fileNameSVG);
-
-                        try
-                        {
-                            var bitmap = svgDocument.Draw(100, 100); //If the Bitmap it's unable to be created, it will go to catch
-
-                            bitmap.Save(fileNameJPG, ImageFormat.Jpeg);
-
-                            File.Delete(fileNameSVG);
-                        }
-                        catch
-                        {
-                            if (File.Exists(pathBackup))
-                            {
-                                imageFile = new FileInfo(pathBackup);
-                                File.Delete(fileNameSVG);
-                                imageFile.CopyTo(fileNameJPG);
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        if(File.Exists(pathBackup))
-                        {
-                            imageFile = new FileInfo(pathBackup);
-                            File.Delete(fileNameSVG);
-                            imageFile.CopyTo(fileNameJPG);
-                        }                        
-                        continue;
-                    }
-                }
-                report.SaveCountries.Add(ct);
-                report.PercentageComplete = (report.SaveCountries.Count * 100) / countries.Count;
-                progress.Report(report);
-            }
+            Countries = await dataService.LoadCountryDataAsync(progress);
         }
 
-        private async Task GetMapsAsync(List<Country> countries, IProgress<ProgressReport> progress)
-        {
-            SavingInDatabase = false;
+        #endregion COUNTRIES
 
+        #region WIKIPEDIA TEXT
+
+        /// <summary>
+        /// Redirects to the ApiService Class to make the API Call to the Wikipedia API asynchronously.
+        /// </summary>
+        /// <param name="countries"></param>
+        /// <param name="progress"></param>
+        /// <returns>Task</returns>
+        private async Task LoadApiWikiTextAsync(List<Country> countries, IProgress<ProgressReport> progress)
+        {
             ProgressReport report = new ProgressReport();
 
-            if (!Directory.Exists("Maps"))
+            foreach (var country in countries)
             {
-                Directory.CreateDirectory("Maps");
-            }
-
-            foreach (var ct in countries)
-            {
-                var fileName = Environment.CurrentDirectory + "/Maps" + $"/{ct.Alpha2Code.ToLower()}.gif";
-                var pathBackup = Environment.CurrentDirectory + "/MapsBackup" + $"/{ct.Alpha2Code.ToLower()}.gif";
-                FileInfo imageFile = new FileInfo(fileName);
+                var fileName = Environment.CurrentDirectory + "/WikiText" + $"/{country.Alpha2Code.ToLower()}.txt";
 
                 if (!File.Exists(fileName))
                 {
                     try
                     {
-                        string path1 = string.Empty;
-                        string path2 = string.Empty;
+                        var response = await apiService.GetWikiText("https://en.wikipedia.org/w/api.php", $"?format=xml&action=query&prop=extracts&titles={country.Name.Replace((' '), ('_'))}&redirects=true", country.Name);
 
-                        if (ct.Name.Contains(' '))
-                            path1 = ct.Name.Replace((' '), ('-')).ToLower();
-                        else
-                            path1 = ct.Name.ToLower();
+                        string output = (string)response.Result;
 
-                        if (ct.Name.Contains(' '))
-                            path2 = ct.Name.Replace((' '), ('_')).ToLower();
-                        else
-                            path2 = ct.Name.ToLower();
-
-                        using (WebClient webClient = new WebClient())
-                        {
-                            await webClient.DownloadFileTaskAsync("https://www.worldmap1.com/map/" + $"{path1}/" + $"where_is_{path2}_in_the_world.gif", @"Maps\" + $"{ct.Alpha2Code.ToLower()}.gif");
-                        }
-
-                        try
-                        {
-                            Bitmap img = new Bitmap(fileName); //If the Bitmap it's unable to be created, it will go to catch
-                        }
-                        catch
-                        {
-                            if (File.Exists(pathBackup))
-                            {
-                                imageFile = new FileInfo(pathBackup);
-                                File.Delete(fileName);
-                                imageFile.CopyTo(fileName);
-                            }
-                        }
+                        await dataService.SaveWikiTextAsync(country.Alpha2Code.ToLower(), output);
                     }
                     catch
                     {
-                        if(File.Exists(pathBackup))
-                        {
-                            imageFile = new FileInfo(pathBackup);
-                            File.Delete(fileName);
-                            imageFile.CopyTo(fileName);
-                        }
                         continue;
                     }
                 }
-                report.SaveCountries.Add(ct);
+                report.SaveCountries.Add(country);
                 report.PercentageComplete = (report.SaveCountries.Count * 100) / countries.Count;
                 progress.Report(report);
             }
         }
 
-        private void LoadLocalCountries()
-        {
-            SavingInDatabase = false;
-
-            Progress<ProgressReport> progress = new Progress<ProgressReport>();
-            progress.ProgressChanged += ReportProgress;
-
-            Countries = dataService.GetCountryDataAsync(progress);
-        }
-
-        private void txtBoxCountries_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            SavingInDatabase = false;
-
-            if (Countries != null && !string.IsNullOrEmpty(txtBoxCountries.Text))
-            {
-                listBoxCountries.ItemsSource = null;
-
-                var aux = Countries.FindAll(x => x.Name.ToLower().Contains(txtBoxCountries.Text.ToLower())).ToList();
-
-                listBoxCountries.ItemsSource = aux;
-
-                if (aux.Count == 0)
-                {
-                    MessageBox.Show("Country does not exist");
-                }
-            }
-            else if (string.IsNullOrEmpty(txtBoxCountries.Text))
-                listBoxCountries.ItemsSource = Countries;
-        }
-
-        private void listBoxCountries_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            SavingInDatabase = false;
-
-            try
-            {
-                mediaPlayer.Close();
-                lbl_Status.Content = string.Empty;
-                comboBoxTranslatorInput.ItemsSource = null;
-                comboBoxTranslatorOutput.ItemsSource = null;
-                comboBoxTranslatorOutput.Items.Clear();
-                comboBoxConverterInput.ItemsSource = null;
-                comboBoxConverterOutput.ItemsSource = null;
-                comboBoxConverterOutput.Items.Clear();
-                if (txtBoxTranslatorInput.Text != "Insert the Text to Translate")
-                    txtBoxTranslatorInput.Text = "Insert the Text to Translate";
-                if (txtBoxTranslatorOutput.Text != "Translated Text")
-                    txtBoxTranslatorOutput.Text = "Translated Text";
-
-                Country country = (Country)listBoxCountries.SelectedItem;
-
-                if (country != null)
-                {
-                    labelName.Content = country.Name;
-                    labelCapital.Content = country.Capital;
-                    labelRegion.Content = country.Region;
-                    labelSubRegion.Content = country.SubRegion;
-                    labelPopulation.Content = country.Population;
-                    labelGini.Content = country.Gini;
-
-                    BitmapImage img = new BitmapImage();
-                    img.BeginInit();
-                    if (File.Exists(Environment.CurrentDirectory + "/Flags" + $"/{country.Alpha3Code.ToLower()}.jpg"))
-                    {
-                        img.UriSource = new Uri(Environment.CurrentDirectory + "/Flags" + $"/{country.Alpha3Code.ToLower()}.jpg");
-                    }
-                    else
-                    {
-                        img.UriSource = new Uri(Environment.CurrentDirectory + "/ImageUnavailable.jpg");
-                        imageFlag1.Stretch = Stretch.None;
-                    }
-                    img.EndInit();
-                    imageFlag1.Source = img;
-                    imageFlag1.Stretch = Stretch.Fill;
-
-                    BitmapImage img2 = new BitmapImage();
-                    img2.BeginInit();
-                    if (File.Exists(Environment.CurrentDirectory + @"\Maps\" + $"{country.Alpha2Code.ToLower()}.gif"))
-                    {
-                        img2.UriSource = new Uri(Environment.CurrentDirectory + @"\Maps\" + $"{country.Alpha2Code.ToLower()}.gif");
-                    }
-                    else
-                    {
-                        img2.UriSource = new Uri(Environment.CurrentDirectory + "/ImageUnavailable.jpg");
-                        imageFlag1.Stretch = Stretch.None;
-                    }
-                    img2.EndInit();
-                    imageMap.Source = img2;
-                    //imageMap.Stretch = Stretch.Fill;
-
-                    List<string> LangDistinct = new List<string>();
-
-                    if (country.Languages != null)
-                    {
-                        foreach (var ct in Countries)
-                        {
-                            foreach (var lg in ct.Languages)
-                            {
-                                if (!LangDistinct.Contains(lg.ToString()))
-                                    LangDistinct.Add(lg.ToString());
-                            }
-                        }
-
-                    }
-                    comboBoxTranslatorInput.ItemsSource = LangDistinct;
-
-                    if (country.Languages != null)
-                    {
-                        foreach (var lg in country.Languages)
-                        {
-                            comboBoxTranslatorOutput.Items.Add(lg.ToString());
-                        }
-                    }
-
-                    comboBoxConverterInput.ItemsSource = Rates;
-
-                    foreach (var cr in country.Currencies)
-                    {
-                        foreach (var rate in Rates)
-                        {
-                            if (cr.code != null)
-                            {
-                                if (cr.code.ToLower() == rate.Code.ToLower())
-                                    comboBoxConverterOutput.Items.Add(rate);
-                            }
-                        }
-                    }
-
-                    if (comboBoxConverterOutput.Items.Count == 0)
-                        comboBoxConverterOutput.Text = "Unable to Convert";
-
-                    textBoxGeography.Text = LoadGeography(country);
-
-                    LoadAudio(country);
-                }
-            }
-            catch(Exception ex)
-            {
-                dialogService.ShowMessage("An error occurred.\nPlease Update Info!", ex.Message);
-            }
-        }
-
-        private void ReportProgress(object sender, ProgressReport e)
-        {
-            ProgressBarCountries.Value = e.PercentageComplete;
-        }
+        #endregion WIKIPEDIA TEXT
 
         #region LANGUAGE TRANSLATOR
 
         private async void btnTranslate_Click(object sender, RoutedEventArgs e)
         {
-            SavingInDatabase = false;
-
             if (string.IsNullOrEmpty(comboBoxTranslatorInput.Text) || string.IsNullOrEmpty(comboBoxTranslatorOutput.Text))
             {
                 MessageBox.Show("   You must choose a Language", "", MessageBoxButton.OK);
@@ -454,14 +213,19 @@ namespace Countries
                 string source = comboBoxTranslatorInput.Text.Split(' ')[0];
                 string target = comboBoxTranslatorOutput.Text.Split(' ')[0];
 
-                await TranslateAsync(source, target, txtBoxTranslatorInput.Text);
+                await LoadApiTranslateAsync(source, target, txtBoxTranslatorInput.Text);
             }
         }
 
-        private async Task TranslateAsync(string source, string target, string input)
+        /// <summary>
+        /// Redirects to the ApiService Class to make the API Call to the Translator API asynchronously.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="target"></param>
+        /// <param name="input"></param>
+        /// <returns>Task</returns>
+        private async Task LoadApiTranslateAsync(string source, string target, string input)
         {
-            SavingInDatabase = false;
-
             var response = await apiService.GetTranslation("https://systran-systran-platform-for-language-processing-v1.p.rapidapi.com", $"/translation/text/translate?source={source}&target={target}&input={input}");
 
             string output = (string)response.Result;
@@ -478,15 +242,11 @@ namespace Countries
 
         private void txtBoxTranslatorInput_GotFocus(object sender, RoutedEventArgs e)
         {
-            SavingInDatabase = false;
-
             txtBoxTranslatorInput.Text = string.Empty;
         }
 
         private void btnSwitchLanguage_Click(object sender, RoutedEventArgs e)
         {
-            SavingInDatabase = false;
-
             List<string> LangList = new List<string>();
 
             foreach (var lang in comboBoxTranslatorOutput.Items)
@@ -523,10 +283,12 @@ namespace Countries
 
         #region CURRENCY CONVERTER
 
-        private async void ConvertAsync()
+        /// <summary>
+        /// Redirects to the ApiService Class to make the API Call to the Rates API asynchronously.
+        /// </summary>
+        /// <returns></returns>
+        private async Task LoadApiRatesAsync()
         {
-            SavingInDatabase = false;
-
             Progress<ProgressReport> progress = new Progress<ProgressReport>();
             progress.ProgressChanged += ReportProgress;
 
@@ -537,22 +299,19 @@ namespace Countries
 
         private void txtBoxCountries_GotFocus(object sender, RoutedEventArgs e)
         {
-            SavingInDatabase = false;
-
             txtBoxCountries.Text = string.Empty;
         }
 
         private void btnConvert_Click(object sender, RoutedEventArgs e)
         {
-            SavingInDatabase = false;
-
             Convert();
         }
 
+        /// <summary>
+        /// Gets and Sets the value to be Converted, calculating it according to the Tax Rates.
+        /// </summary>
         private void Convert()
         {
-            SavingInDatabase = false;
-
             if (string.IsNullOrEmpty(txtBoxConverterInput.Text))
             {
                 dialogService.ShowMessage("Error", "Insert a Value to Convert");
@@ -592,15 +351,11 @@ namespace Countries
 
         private void txtBoxConverterInput_GotFocus(object sender, RoutedEventArgs e)
         {
-            SavingInDatabase = false;
-
             txtBoxConverterInput.Text = string.Empty;
         }
 
         private void btnSwitchCurrency_Click(object sender, RoutedEventArgs e)
         {
-            SavingInDatabase = false;
-
             List<string> CurrencyList = new List<string>();
 
             foreach (var currency in comboBoxConverterOutput.Items)
@@ -637,55 +392,13 @@ namespace Countries
 
         #region MUSIC PLAYER
 
-        private async Task GetAudioAsync(List<Country> countries, IProgress<ProgressReport> progress)
+        /// <summary>
+        /// Loads the Audio file from the Audio Folder to be displayed.
+        /// </summary>
+        /// <param name="alpha2Code"></param>
+        private void LoadAudio(string alpha2Code)
         {
-            SavingInDatabase = false;
-
-            ProgressReport report = new ProgressReport();
-
-            if (!Directory.Exists("Audio"))
-            {
-                Directory.CreateDirectory("Audio");
-            }
-
-            foreach (var country in countries)
-            {
-                var fileName = Environment.CurrentDirectory + "/Audio" + $"/{country.Alpha2Code.ToLower()}.mp3";
-                var pathBackup = Environment.CurrentDirectory + "/AudioBackup" + $"/{country.Alpha2Code.ToLower()}.mp3";
-
-                if (!File.Exists(fileName))
-                {
-                    FileInfo fileLength = new FileInfo(fileName);
-
-                    try
-                    {
-                        using (var client = new WebClient())
-                        {
-                            await client.DownloadFileTaskAsync("http://www.nationalanthems.info/" + $"{country.Alpha2Code.ToLower()}.mp3", fileName);
-                        }
-                    }
-                    catch
-                    {
-                        if(File.Exists(pathBackup))
-                        {
-                            File.Delete(fileName);
-                            fileLength = new FileInfo(pathBackup);
-                            fileLength.CopyTo(fileName);
-                        }
-                        continue;
-                    }
-                }
-                report.SaveCountries.Add(country);
-                report.PercentageComplete = (report.SaveCountries.Count * 100) / countries.Count;
-                progress.Report(report);
-            }
-        }
-
-        private void LoadAudio(Country country)
-        {
-            SavingInDatabase = false;
-
-            mediaPlayer.Open(new Uri(Environment.CurrentDirectory + @"\Audio\" + $"{country.Alpha2Code.ToLower()}.mp3"));
+            mediaPlayer.Open(new Uri(Environment.CurrentDirectory + @"\Audio\" + $"{alpha2Code}.mp3"));
 
             DispatcherTimer timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromSeconds(0);
@@ -695,29 +408,26 @@ namespace Countries
 
         private void btnPlay_Click(object sender, RoutedEventArgs e)
         {
-            SavingInDatabase = false;
-
             mediaPlayer.Play();
         }
 
         private void btnPause_Click(object sender, RoutedEventArgs e)
         {
-            SavingInDatabase = false;
-
             mediaPlayer.Pause();
         }
 
         private void btnStop_Click(object sender, RoutedEventArgs e)
         {
-            SavingInDatabase = false;
-
             mediaPlayer.Stop();
         }
 
+        /// <summary>
+        /// Event to set the Timer, Slider Bar and Volume Bar.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void timer_Tick(object sender, EventArgs e)
         {
-            SavingInDatabase = false;
-
             if ((mediaPlayer.Source != null) && (mediaPlayer.NaturalDuration.HasTimeSpan) && (!userIsDraggingSlider))
             {
                 sliProgress.Minimum = 0;
@@ -730,141 +440,174 @@ namespace Countries
 
         private void sliProgress_DragStarted(object sender, DragStartedEventArgs e)
         {
-            SavingInDatabase = false;
-
             userIsDraggingSlider = true;
         }
 
         private void sliProgress_DragCompleted(object sender, DragCompletedEventArgs e)
         {
-            SavingInDatabase = false;
-
             userIsDraggingSlider = false;
             mediaPlayer.Position = TimeSpan.FromSeconds(sliProgress.Value);
         }
 
         private void sliProgress_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            SavingInDatabase = false;
-
             if (mediaPlayer.Source != null)
                 lblProgressStatus.Text = $"{TimeSpan.FromSeconds(sliProgress.Value).ToString(@"mm\:ss")} / {mediaPlayer.NaturalDuration.TimeSpan.ToString(@"mm\:ss")}";
         }
 
         private void Grid_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            SavingInDatabase = false;
-
             mediaPlayer.Volume += (e.Delta > 0) ? 0.1 : -0.1;
         }
 
         #endregion MUSIC PLAYER
 
-        #region GEOGRAPHY TEXT
+        private void txtBoxCountries_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (Countries != null && !string.IsNullOrEmpty(txtBoxCountries.Text))
+            {
+                listBoxCountries.ItemsSource = null;
 
-        private string LoadGeography(Country country)
+                var aux = Countries.FindAll(x => x.Name.ToLower().Contains(txtBoxCountries.Text.ToLower())).ToList();
+
+                listBoxCountries.ItemsSource = aux;
+
+                if (aux.Count == 0)
+                {
+                    MessageBox.Show("Country does not Exist!");
+                }
+            }
+            else if (string.IsNullOrEmpty(txtBoxCountries.Text))
+                listBoxCountries.ItemsSource = Countries;
+        }
+
+        private void listBoxCountries_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             try
             {
-                string ficheiro = @"Geography\" + $"{country.Name}.txt";
+                mediaPlayer.Close();
+                comboBoxTranslatorInput.ItemsSource = null;
+                comboBoxTranslatorOutput.ItemsSource = null;
+                comboBoxTranslatorOutput.Items.Clear();
+                comboBoxConverterInput.ItemsSource = null;
+                comboBoxConverterOutput.ItemsSource = null;
+                comboBoxConverterOutput.Items.Clear();
+                if (txtBoxTranslatorInput.Text != "Insert the Text to Translate")
+                    txtBoxTranslatorInput.Text = "Insert the Text to Translate";
+                if (txtBoxTranslatorOutput.Text != "Translated Text")
+                    txtBoxTranslatorOutput.Text = "Translated Text";
+                comboBoxTranslatorInput.SelectedItem = "en - English";
+                if (txtBoxConverterInput.Text != "Insert the Value to Convert")
+                    txtBoxConverterInput.Text = "Insert the Value to Convert";
+                if (txtBoxConverterOutput.Text != "Converted Value")
+                    txtBoxConverterOutput.Text = "Converted Value";
 
-                string Texto = string.Empty;
+                Country country = (Country)listBoxCountries.SelectedItem;
 
-                StreamReader sr;
-
-                if (File.Exists(ficheiro))//Só funciona se já existir um ficheiro
+                if (country != null)
                 {
-                    sr = File.OpenText(ficheiro);
+                    labelName.Content = country.Name;
+                    labelCapital.Content = country.Capital;
+                    labelRegion.Content = country.Region;
+                    labelSubRegion.Content = country.SubRegion;
+                    labelPopulation.Content = country.Population;
+                    labelGini.Content = country.Gini;
 
-                    string linha = string.Empty;
+                    string fileNameFlags = Environment.CurrentDirectory + "/Flags" + $"/{country.Alpha3Code.ToLower()}.jpg";
 
-                    while ((linha = sr.ReadLine()) != null)
+                    BitmapImage img = new BitmapImage();
+                    img.BeginInit();
+                    if (File.Exists(fileNameFlags))
                     {
-                        Texto = linha;
+                        img.UriSource = new Uri(fileNameFlags);
                     }
-                    sr.Close();
+                    else
+                    {
+                        img.UriSource = new Uri(Environment.CurrentDirectory + "/ImageUnavailable.jpg");
+                        imageFlag1.Stretch = Stretch.None;
+                    }
+                    img.EndInit();
+                    imageFlag1.Source = img;
+
+                    string fileNameMaps = Environment.CurrentDirectory + @"\Maps\" + $"{country.Alpha2Code.ToLower()}.gif";
+
+                    BitmapImage img2 = new BitmapImage();
+                    img2.BeginInit();
+                    if (File.Exists(fileNameMaps))
+                    {
+                        img2.UriSource = new Uri(fileNameMaps);
+                    }
+                    else
+                    {
+                        img2.UriSource = new Uri(Environment.CurrentDirectory + "/ImageUnavailable.jpg");
+                        imageFlag1.Stretch = Stretch.None;
+                    }
+                    img2.EndInit();
+                    imageMap.Source = img2;
+
+                    List<string> LangDistinct = new List<string>();
+
+                    if (country.Languages != null)
+                    {
+                        foreach (var ct in Countries)
+                        {
+                            foreach (var lg in ct.Languages)
+                            {
+                                if (!LangDistinct.Contains(lg.ToString()))
+                                    LangDistinct.Add(lg.ToString());
+                            }
+                        }
+
+                    }
+                    comboBoxTranslatorInput.ItemsSource = LangDistinct;
+
+                    if (country.Languages != null)
+                    {
+                        foreach (var lg in country.Languages)
+                        {
+                            comboBoxTranslatorOutput.Items.Add(lg.ToString());
+                        }
+                    }
+
+                    comboBoxConverterInput.ItemsSource = Rates;
+
+                    if (Rates != null)
+                    {
+                        foreach (var cr in country.Currencies)
+                        {
+                            foreach (var rate in Rates)
+                            {
+                                if (cr.code != null)
+                                {
+                                    if (cr.code.ToLower() == rate.Code.ToLower())
+                                        comboBoxConverterOutput.Items.Add(rate);
+                                }
+                            }
+                        }
+                    }
+
+                    if (comboBoxConverterOutput.Items.Count == 0)
+                        comboBoxConverterOutput.Text = "Unable to Convert";
+
+                    textBoxWiki.Text = dataService.LoadWikiText(country.Alpha2Code.ToLower());
+
+                    LoadAudio(country.Alpha2Code.ToLower());
                 }
-                return Texto;
             }
-            catch
+            catch (Exception ex)
             {
-                MessageBox.Show("Error!");
-
-                return null;
+                dialogService.ShowMessage("An error occurred.\nPlease Update Info!", ex.Message);
             }
         }
-
-        /// <summary>
-        /// Gets a block of Text from a Webpage using the URL path, decoding the Webpage HTML, and displays it on a TextBox
-        /// </summary>
-        /// <param name="selectedCountry"></param>
-        private async Task GetGeographyTextAsync(List<Country> countries)
-        {
-            foreach (var country in countries)
-            {
-                try
-                {
-                    if (!Directory.Exists("Geography"))
-                    {
-                        Directory.CreateDirectory("Geography");
-                    }
-
-                    string ficheiro = @"Geography\" + $"{country.Name}.txt";
-
-                    StreamWriter sw = new StreamWriter(ficheiro, false);
-
-                    if (!File.Exists(ficheiro))
-                    {
-                        sw = File.CreateText(ficheiro);
-                    }
-
-                    if (country.Name.Contains(' '))
-                        country.Name = country.Name.Replace((' '), ('-'));
-
-                    WebClient wc = new WebClient();
-                    string webData = wc.DownloadString("https://www.infoplease.com/world/countries/" + $"{country.Name}");
-
-                    if (country.Name.Contains('-'))
-                        country.Name = country.Name.Replace(('-'), (' '));
-
-                    string Texto = StripHTML(webData.Split(new string[] { "Geography" }, StringSplitOptions.None)[3].Split(new string[] { "Government" }, StringSplitOptions.None)[0].ToString(), true);
-
-                    await Task.Run(() => sw.WriteLine(Texto));
-
-                    sw.Close();
-                }
-                catch
-                {
-                    if (country.Name.Contains('-'))
-                        country.Name = country.Name.Replace(('-'), (' '));
-                    continue;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Converts HTML into a String
-        /// </summary>
-        /// <param name="HTMLText"></param>
-        /// <param name="decode"></param>
-        /// <returns></returns>
-        public static string StripHTML(string HTMLText, bool decode = true)
-        {
-            Regex reg = new Regex("<[^>]+>", RegexOptions.IgnoreCase);
-            var stripped = reg.Replace(HTMLText, "");
-            return decode ? HttpUtility.HtmlDecode(stripped) : stripped;
-        }
-
-        #endregion GEOGRAPHY TEXT
 
         private async void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
-            SavingInDatabase = true;
-
             Progress<ProgressReport> progress = new Progress<ProgressReport>();
             progress.ProgressChanged += ReportProgress;
 
             lbl_Status.Content = "Updating...";
+
+            btnUpdate.IsEnabled = false;
 
             await dataService.DeleteDataAsync();
 
@@ -873,12 +616,12 @@ namespace Countries
             lbl_Status.Content = "Update Complete";
 
             this.Closing += Window_Closing;
+
+            btnUpdate.IsEnabled = true;
         }
 
         private void btnAbout_Click(object sender, RoutedEventArgs e)
         {
-            SavingInDatabase = false;
-
             AboutWindow aw = new AboutWindow();
             aw.Show();
         }
@@ -887,18 +630,21 @@ namespace Countries
         {
             try
             {
-                if (SavingInDatabase == true)
+                if ((lbl_Status.Content == "Saving...") || (lbl_Status.Content == "Updating...") || (lbl_Status.Content == "Loading..."))
                 {
-                    e.Cancel = true;
+                    MessageBoxResult result = MessageBox.Show("Do you wish to exit the program?\n The program might not run properly next time!\n",
+                        "", MessageBoxButton.YesNo);
 
-                    MessageBox.Show("This will interrupt the Update!\nThe program will not run properly!\n" +
-                        "Next time the program is in use, the Update will complete.");
+                    if (result == MessageBoxResult.Yes)
+                        return;
+                    else
+                        e.Cancel = true;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                Close();
-            }            
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 }
