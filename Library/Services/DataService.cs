@@ -265,18 +265,18 @@ namespace Services
             var fileName = Environment.CurrentDirectory + "/WikiText" + $"/{alpha2Code}.txt";
             var pathBackup = Environment.CurrentDirectory + "/WikiTextBackup" + $"/{alpha2Code}.txt";
 
-            if (!Directory.Exists("WikiText"))
-            {
-                Directory.CreateDirectory("WikiText");
-            }
-
             if (!File.Exists(fileName))
             {
-                FileInfo textFile = new FileInfo(fileName);
-                string Text = string.Empty;
-
                 try
                 {
+                    FileInfo textFile = new FileInfo(fileName);
+                    string Text = string.Empty;
+
+                    if (!Directory.Exists("WikiText"))
+                    {
+                        Directory.CreateDirectory("WikiText");
+                    }
+
                     StreamWriter sw = new StreamWriter(fileName, false);
 
                     if (!File.Exists(fileName))
@@ -321,14 +321,9 @@ namespace Services
                         sr.Close();
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    if (File.Exists(pathBackup))
-                    {
-                        textFile = new FileInfo(pathBackup);
-                        File.Delete(fileName);
-                        textFile.CopyTo(fileName);
-                    }
+                    MessageBox.Show(ex.Message);
                 }
             }
         }
@@ -372,7 +367,9 @@ namespace Services
                         else
                         {
                             imageFile = new FileInfo(pathBackup);
+
                             File.Delete(fileNameSVG);
+
                             imageFile.CopyTo(fileNameJPG);
                         }
 
@@ -382,7 +379,9 @@ namespace Services
                         try
                         {
                             var bitmap = svgDocument.Draw(100, 100); //If the Bitmap it's unable to be created, it will go to catch
+
                             bitmap.Save(fileNameJPG, ImageFormat.Jpeg);
+
                             File.Delete(fileNameSVG);
                         }
                         catch
@@ -457,7 +456,6 @@ namespace Services
                                 File.Delete(fileName);
                                 imageFile.CopyTo(fileName);
                             }
-                            continue;
                         }
                     }
                     catch
@@ -566,9 +564,13 @@ namespace Services
                     country.Currencies = (await LoadCurrencyData(country.Alpha3Code));
                 }
 
+                await LoadRatesData();
+
                 report.SaveCountries = Countries;
                 report.PercentageComplete = (report.SaveCountries.Count * 100) / Countries.Count;
                 progress.Report(report);
+
+                connection.Close();
 
                 return Countries;
             }
@@ -643,8 +645,6 @@ namespace Services
                     }));
                 }
 
-                connection.Close();
-
                 return Rates;
             }
             catch (Exception ex)
@@ -687,7 +687,7 @@ namespace Services
             }
             catch (Exception ex)
             {
-                dialogService.ShowMessage("Error", ex.Message);
+                MessageBox.Show(ex.Message);
                 return null;
             }
         }

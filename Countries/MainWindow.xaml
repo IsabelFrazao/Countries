@@ -11,56 +11,56 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Border BorderThickness="1" BorderBrush="LightGray" HorizontalAlignment="Left" Height="103" Margin="683,90,0,0" VerticalAlignment="Top" Width="145">
+        <Border BorderThickness="1" BorderBrush="LightGray" HorizontalAlignment="Left" Height="103" Margin="651,90,0,0" VerticalAlignment="Top" Width="145">
             <Image x:Name="imageFlag1" Stretch="Fill" RenderTransformOrigin="1.095,0.39" />
         </Border>
         <Image HorizontalAlignment="Left" Height="31" VerticalAlignment="Top" Width="822" Source="img_paises.jpg" Stretch="Fill" Margin="-11,0,0,0"/>
         <Image Height="34" VerticalAlignment="Top" Source="img_paises2.jpg" Stretch="UniformToFill" Margin="801,0,0.6,0"/>
-        <Label Content="Name:" HorizontalAlignment="Left" Margin="279,90,0,0" VerticalAlignment="Top" FontWeight="Bold" RenderTransformOrigin="0.651,0.648" Height="26" Width="46"/>
+        <Label Content="Name:" HorizontalAlignment="Left" Margin="279,93,0,0" VerticalAlignment="Top" FontWeight="Bold" RenderTransformOrigin="0.651,0.648" Height="26" Width="46"/>
         <Label Content="Capital:" HorizontalAlignment="Left" Margin="279,128,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="26" Width="53"/>
-        <Label Content="Region:" HorizontalAlignment="Left" Margin="279,169,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="26" Width="53"/>
-        <Label Content="Sub-Region:" HorizontalAlignment="Left" Margin="279,211,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="26" Width="78"/>
-        <Label Content="Population:" HorizontalAlignment="Left" Margin="279,255,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="26" Width="75"/>
-        <Label Content="GINI:" HorizontalAlignment="Left" Margin="279,299,0,0" VerticalAlignment="Top" FontWeight="Bold" RenderTransformOrigin="1.029,0.611" Height="26" Width="38"/>
-        <Label x:Name="labelName" Content="" HorizontalAlignment="Left" Margin="394,90,0,0" VerticalAlignment="Top" Width="270" Height="26"/>
-        <Label x:Name="labelCapital" Content="" HorizontalAlignment="Left" Margin="394,128,0,0" VerticalAlignment="Top" Width="270" Height="26"/>
-        <Label x:Name="labelRegion" Content="" HorizontalAlignment="Left" Margin="394,169,0,0" VerticalAlignment="Top" Width="270" Height="26"/>
-        <Label x:Name="labelSubRegion" Content="" HorizontalAlignment="Left" Margin="394,211,0,0" VerticalAlignment="Top" Width="270" Height="26"/>
-        <Label x:Name="labelPopulation" Content="" HorizontalAlignment="Left" Margin="394,255,0,0" VerticalAlignment="Top" Width="270" Height="26"/>
-        <Label x:Name="labelGini" Content="" HorizontalAlignment="Left" Margin="394,299,0,0" VerticalAlignment="Top" Width="270" Height="26"/>
-        <Button x:Name="labelTranslator" Content="Language Translator" FontWeight="Bold" HorizontalAlignment="Left" Margin="875,93,0,0" VerticalAlignment="Top" Width="471" Height="22"/>
-        <Button x:Name="labelConverter" Content="Currency Converter" FontWeight="Bold" HorizontalAlignment="Left" Margin="875,396,0,0" VerticalAlignment="Top" Width="471" Height="22"/>
-        <TextBox x:Name="txtBoxTranslatorInput" HorizontalAlignment="Left" Height="113" Margin="875,183,0,0" TextWrapping="Wrap" Text="Insert the Text to Translate" VerticalAlignment="Top" Width="223" GotFocus="txtBoxTranslatorInput_GotFocus"/>
-        <TextBox x:Name="txtBoxTranslatorOutput" HorizontalAlignment="Left" Height="113" Margin="1123,183,0,0" TextWrapping="Wrap" Text="Translated Text" VerticalAlignment="Top" Width="223"/>
-        <TextBox x:Name="txtBoxConverterInput" HorizontalAlignment="Left" Height="26" Margin="875,496,0,0" TextWrapping="Wrap" Text="Insert the Value to Convert" VerticalAlignment="Top" Width="223" GotFocus="txtBoxConverterInput_GotFocus"/>
-        <TextBox x:Name="txtBoxConverterOutput" HorizontalAlignment="Left" Height="26" Margin="1123,496,0,0" TextWrapping="Wrap" Text="Converted Value" VerticalAlignment="Top" Width="223"/>
-        <ComboBox x:Name="comboBoxConverterInput" HorizontalAlignment="Left" Margin="875,454,0,0" VerticalAlignment="Top" Width="223" Height="22"/>
-        <ComboBox x:Name="comboBoxConverterOutput" HorizontalAlignment="Left" Margin="1123,454,0,0" VerticalAlignment="Top" Width="223" Height="22"/>
-        <Button x:Name="btnConvert" Content="Convert" FontWeight="Bold" HorizontalAlignment="Left" Margin="999,577,0,0" VerticalAlignment="Top" Width="223" Height="22" Click="btnConvert_Click"/>
-        <Button x:Name="btnTranslate" Content="Translate" FontWeight="Bold" HorizontalAlignment="Left" Margin="1001,348,0,0" VerticalAlignment="Top" Width="223" Height="22" Click="btnTranslate_Click"/>
-        <ComboBox x:Name="comboBoxTranslatorInput" HorizontalAlignment="Left" Margin="875,151,0,0" VerticalAlignment="Top" Width="223" Height="22"/>
-        <ComboBox x:Name="comboBoxTranslatorOutput" HorizontalAlignment="Left" Margin="1123,151,0,0" VerticalAlignment="Top" Width="223" Height="22"/>
+        <Label Content="Region:" HorizontalAlignment="Left" Margin="279,167,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="26" Width="53"/>
+        <Label Content="Sub-Region:" HorizontalAlignment="Left" Margin="279,213,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="26" Width="78"/>
+        <Label Content="Population:" HorizontalAlignment="Left" Margin="279,254,0,0" VerticalAlignment="Top" FontWeight="Bold" Height="26" Width="75"/>
+        <Label Content="GINI:" HorizontalAlignment="Left" Margin="279,304,0,0" VerticalAlignment="Top" FontWeight="Bold" RenderTransformOrigin="1.029,0.611" Height="26" Width="38"/>
+        <Label x:Name="labelName" Content="" HorizontalAlignment="Left" Margin="375,93,0,0" VerticalAlignment="Top" Width="257" Height="26"/>
+        <Label x:Name="labelCapital" Content="" HorizontalAlignment="Left" Margin="375,128,0,0" VerticalAlignment="Top" Width="257" Height="26"/>
+        <Label x:Name="labelRegion" Content="" HorizontalAlignment="Left" Margin="375,167,0,0" VerticalAlignment="Top" Width="257" Height="26"/>
+        <Label x:Name="labelSubRegion" Content="" HorizontalAlignment="Left" Margin="375,213,0,0" VerticalAlignment="Top" Width="257" Height="26"/>
+        <Label x:Name="labelPopulation" Content="" HorizontalAlignment="Left" Margin="375,254,0,0" VerticalAlignment="Top" Width="257" Height="26"/>
+        <Label x:Name="labelGini" Content="" HorizontalAlignment="Left" Margin="375,304,0,0" VerticalAlignment="Top" Width="257" Height="26"/>        
+        <Button x:Name="labelTranslator" Content="Language Translator" FontWeight="Bold" HorizontalAlignment="Left" Margin="852,93,0,0" VerticalAlignment="Top" Width="458" Height="22"/>
+        <Button x:Name="labelConverter" Content="Currency Converter" FontWeight="Bold" HorizontalAlignment="Left" Margin="852,396,0,0" VerticalAlignment="Top" Width="458" Height="22"/>
+        <TextBox x:Name="txtBoxTranslatorInput" HorizontalAlignment="Left" Height="113" Margin="852,183,0,0" TextWrapping="Wrap" Text="Insert the Text to Translate" VerticalAlignment="Top" Width="223" GotFocus="txtBoxTranslatorInput_GotFocus"/>
+        <TextBox x:Name="txtBoxTranslatorOutput" HorizontalAlignment="Left" Height="113" Margin="1087,183,0,0" TextWrapping="Wrap" Text="Translated Text" VerticalAlignment="Top" Width="223"/>
+        <TextBox x:Name="txtBoxConverterInput" HorizontalAlignment="Left" Height="26" Margin="852,496,0,0" TextWrapping="Wrap" Text="Insert the Value to Convert" VerticalAlignment="Top" Width="223" GotFocus="txtBoxConverterInput_GotFocus"/>
+        <TextBox x:Name="txtBoxConverterOutput" HorizontalAlignment="Left" Height="26" Margin="1087,496,0,0" TextWrapping="Wrap" Text="Converted Value" VerticalAlignment="Top" Width="223"/>
+        <ComboBox x:Name="comboBoxConverterInput" HorizontalAlignment="Left" Margin="852,454,0,0" VerticalAlignment="Top" Width="223" Height="22"/>
+        <ComboBox x:Name="comboBoxConverterOutput" HorizontalAlignment="Left" Margin="1087,454,0,0" VerticalAlignment="Top" Width="223" Height="22"/>
+        <Button x:Name="btnConvert" Content="Convert" FontWeight="Bold" HorizontalAlignment="Left" Margin="970,577,0,0" VerticalAlignment="Top" Width="223" Height="22" Click="btnConvert_Click"/>
+        <Button x:Name="btnTranslate" Content="Translate" FontWeight="Bold" HorizontalAlignment="Left" Margin="970,349,0,0" VerticalAlignment="Top" Width="223" Height="22" Click="btnTranslate_Click"/>
+        <ComboBox x:Name="comboBoxTranslatorInput" HorizontalAlignment="Left" Margin="852,151,0,0" VerticalAlignment="Top" Width="223" Height="22"/>
+        <ComboBox x:Name="comboBoxTranslatorOutput" HorizontalAlignment="Left" Margin="1087,151,0,0" VerticalAlignment="Top" Width="223" Height="22"/>
         <ListBox x:Name="listBoxCountries" HorizontalAlignment="Left" Height="478" Margin="46,121,0,0" VerticalAlignment="Top" Width="189" SelectionChanged="listBoxCountries_SelectionChanged"/>
         <TextBox x:Name="txtBoxCountries" HorizontalAlignment="Left" Height="23" Margin="46,93,0,0" TextWrapping="Wrap" Text="Search for a Country" VerticalAlignment="Top" Width="189" TextChanged="txtBoxCountries_TextChanged" GotFocus="txtBoxCountries_GotFocus"/>
-        <Label x:Name="labelSelectLang" Content="Choose a Language:" HorizontalAlignment="Left" Margin="875,125,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="223" Height="26"/>
-        <Label x:Name="labelSelectLangCountry" Content="Choose a Language from this Country:" HorizontalAlignment="Left" Margin="1123,125,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="236" Height="26"/>
-        <Label x:Name="labelSelectCurrency" Content="Choose a Currency:" HorizontalAlignment="Left" Margin="875,428,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="223" Height="26"/>
-        <Label x:Name="labelSelectCurrencyCountry" Content="Choose a Currency from this Country:" HorizontalAlignment="Left" Margin="1123,428,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="223" Height="26"/>
-        <Button x:Name="btnSwitchLanguage" HorizontalAlignment="Left" Margin="1092,304,0,0" VerticalAlignment="Top" Width="40" Height="28" Click="btnSwitchLanguage_Click">
+        <Label x:Name="labelSelectLang" Content="Choose a Language:" HorizontalAlignment="Left" Margin="852,125,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="223" Height="26"/>
+        <Label x:Name="labelSelectLangCountry" Content="Choose a Language from this Country:" HorizontalAlignment="Left" Margin="1087,125,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="236" Height="26"/>
+        <Label x:Name="labelSelectCurrency" Content="Choose a Currency:" HorizontalAlignment="Left" Margin="852,428,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="223" Height="26"/>
+        <Label x:Name="labelSelectCurrencyCountry" Content="Choose a Currency from this Country:" HorizontalAlignment="Left" Margin="1087,428,0,0" VerticalAlignment="Top" FontWeight="Bold" Width="223" Height="26"/>
+        <Button x:Name="btnSwitchLanguage" HorizontalAlignment="Left" Margin="1061,305,0,0" VerticalAlignment="Top" Width="40" Height="28" Click="btnSwitchLanguage_Click">
             <StackPanel>
                 <Image Source="images.png" Height="25" Width="37" />
             </StackPanel>
         </Button>
-        <Button x:Name="btnSwitchCurrency" HorizontalAlignment="Left" Margin="1090,532,0,0" VerticalAlignment="Top" Width="40" Height="28" Click="btnSwitchCurrency_Click">
+        <Button x:Name="btnSwitchCurrency" HorizontalAlignment="Left" Margin="1061,532,0,0" VerticalAlignment="Top" Width="40" Height="28" Click="btnSwitchCurrency_Click">
             <Image Source="images.png" Height="25" Width="37" />
         </Button>
         <ProgressBar x:Name="ProgressBarCountries" HorizontalAlignment="Left" Height="39" Margin="0,621,0,0" VerticalAlignment="Top" Width="1394"/>
-        <TextBox x:Name="textBoxWiki" HorizontalAlignment="Left" Height="164" Margin="279,396,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="549" BorderThickness="0" IsReadOnly="True"/>
-        <Border BorderThickness="1" BorderBrush="LightGray" HorizontalAlignment="Left" Height="158" Margin="683,213,0,0" VerticalAlignment="Top" Width="145">
-            <Image x:Name="imageMap" Stretch="Fill" RenderTransformOrigin="1.095,0.39"/>
+        <TextBox x:Name="textBoxWiki" HorizontalAlignment="Left" Height="164" Margin="279,396,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="517" BorderThickness="0" IsReadOnly="True"/>
+        <Border BorderThickness="1" BorderBrush="LightGray" HorizontalAlignment="Left" Height="158" Margin="651,213,0,0" VerticalAlignment="Top" Width="145">
+        <Image x:Name="imageMap" Stretch="Fill" RenderTransformOrigin="1.095,0.39"/>
         </Border>
         <Label Content="National Anthem:" HorizontalAlignment="Left" Margin="279,345,0,0" VerticalAlignment="Top" FontWeight="Bold" RenderTransformOrigin="1.029,0.611" Height="26" Width="110"/>
-        <StatusBar Background="White" Margin="394,345,729.6,281" BorderThickness="1" BorderBrush="LightGray">
+        <StatusBar Background="White" Margin="394,345,762,281" BorderThickness="1" BorderBrush="LightGray">
             <StatusBar.ItemsPanel>
                 <ItemsPanelTemplate>
                     <Grid MouseWheel="Grid_MouseWheel">
@@ -89,11 +89,11 @@
                 <Slider x:Name="sliProgress" Thumb.DragStarted="sliProgress_DragStarted"  Thumb.DragCompleted="sliProgress_DragCompleted" ValueChanged="sliProgress_ValueChanged" Margin="2,0,32.8,0" />
             </StatusBarItem>
             <StatusBarItem Grid.Column="2" HorizontalContentAlignment="Stretch" Margin="44.4,0,-2,-0.2">
-                <ProgressBar x:Name="pbVolume" Width="30" Height="12" Maximum="1" Value="{Binding ElementName=mediaPlayer, Path=Volume}" Margin="36,0,7.6,0" />
+                <ProgressBar x:Name="pbVolume" Width="30" Height="12" Maximum="1" Value="{Binding ElementName=mediaPlayer, Path=Volume}" />
             </StatusBarItem>
         </StatusBar>
         <Label x:Name="lbl_Status" HorizontalAlignment="Left" Margin="74,49,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
         <Button x:Name="btnUpdate" Content="Update Info" FontWeight="Bold" HorizontalAlignment="Left" Margin="279,577,0,0" VerticalAlignment="Top" Width="223" Height="22" Click="btnUpdate_Click"/>
-        <Button x:Name="btnAbout" Content="About" FontWeight="Bold" HorizontalAlignment="Left" Margin="605,577,0,0" VerticalAlignment="Top" Width="223" Height="22" Click="btnAbout_Click"/>
+        <Button x:Name="btnAbout" Content="About" FontWeight="Bold" HorizontalAlignment="Left" Margin="573,577,0,0" VerticalAlignment="Top" Width="223" Height="22" Click="btnAbout_Click"/>
     </Grid>
 </Window>

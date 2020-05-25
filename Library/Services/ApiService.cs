@@ -74,7 +74,7 @@ namespace Services
 
         /// <summary>
         /// Makes an API Call to Get the Inserted Text Translation and display it. 
-        /// The call is made with every new Inserted Text Translation Request.
+        /// The call is made with every new Inserted Text.
         /// </summary>
         /// <param name="urlBase"></param>
         /// <param name="controller"></param>
@@ -216,7 +216,9 @@ namespace Services
                 else
                     output = parts[2];
 
-                output = Regex.Replace(output, @"(&lt;[\s\S]+?&gt;)", string.Empty); //Remove Tags from the XML
+                //Remove the tags from the XML
+                output = Regex.Replace(output, @"&lt;[^&gt;]+&gt;", string.Empty); //Remove Tags
+                output = Regex.Replace(output, @"(&lt;[\s\S]+?&gt;)", string.Empty); //Remove remaining Tags / Tags' remains
 
                 output = output.Replace("listen", string.Empty);
 
