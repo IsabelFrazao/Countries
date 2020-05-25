@@ -80,7 +80,6 @@ namespace Countries
                 await LoadLocalCountriesAsync();
                 load = false;
                 lbl_Status.Content = "Loading Complete";
-                btnUpdate.IsEnabled = true;
             }
             else
             {
@@ -119,6 +118,8 @@ namespace Countries
             else
             {
                 lbl_Status.Content = "Loaded Successfully" + Environment.NewLine + "        Offline";
+                txtBoxTranslatorOutput.Text = "-- Translation Unavailable --";
+                txtBoxTranslatorInput.Text = "-- Translation Unavailable --";
             }
         }
 
@@ -157,6 +158,8 @@ namespace Countries
             progress.ProgressChanged += ReportProgress;
 
             Countries = await dataService.LoadCountryDataAsync(progress);
+
+            Rates = await dataService.LoadRatesData();
         }
 
         #endregion COUNTRIES
@@ -504,6 +507,12 @@ namespace Countries
 
                 Country country = (Country)listBoxCountries.SelectedItem;
 
+                if(country.Languages == null)
+                {
+                    txtBoxTranslatorOutput.Text = "-- Translation Unavailable --";
+                    txtBoxTranslatorInput.Text = "-- Translation Unavailable --";
+                }                
+
                 if (country != null)
                 {
                     labelName.Content = country.Name;
@@ -630,7 +639,7 @@ namespace Countries
         {
             try
             {
-                if ((lbl_Status.Content == "Saving...") || (lbl_Status.Content == "Updating...") || (lbl_Status.Content == "Loading..."))
+                if (((string)lbl_Status.Content == "Saving...") || ((string)lbl_Status.Content == "Updating...") || ((string)lbl_Status.Content == "Loading..."))
                 {
                     MessageBoxResult result = MessageBox.Show("Do you wish to exit the program?\n The program might not run properly next time!\n",
                         "", MessageBoxButton.YesNo);
