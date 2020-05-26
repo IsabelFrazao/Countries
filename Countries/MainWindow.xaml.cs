@@ -507,14 +507,14 @@ namespace Countries
 
                 Country country = (Country)listBoxCountries.SelectedItem;
 
-                if(country.Languages == null)
-                {
-                    txtBoxTranslatorOutput.Text = "-- Translation Unavailable --";
-                    txtBoxTranslatorInput.Text = "-- Translation Unavailable --";
-                }                
-
                 if (country != null)
                 {
+                    if (country.Languages == null)
+                    {
+                        txtBoxTranslatorOutput.Text = "-- Translation Unavailable --";
+                        txtBoxTranslatorInput.Text = "-- Translation Unavailable --";
+                    }
+
                     labelName.Content = country.Name;
                     labelCapital.Content = country.Capital;
                     labelRegion.Content = country.Region;
